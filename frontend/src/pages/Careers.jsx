@@ -1,10 +1,14 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState, useMemo } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import axiosInstance from '../api/axiosInstance';
 
 function Careers() {
+  const navigate = useNavigate();
   const [careers, setCareers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState([]);
+  const [search, setSearch] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('All');
 
   useEffect(() => {
     const fetchCareers = async () => {
@@ -20,27 +24,100 @@ function Careers() {
     fetchCareers();
   }, []);
 
+  const categories = useMemo(() => {
+    const unique = [...new Set(careers.map((c) => c.category))];
+    return ['All', ...unique.sort()];
+  }, [careers]);
+
+  const filteredCareers = useMemo(() => {
+    return careers.filter((c) => {
+      const matchesSearch =
+        c.name.toLowerCase().includes(search.toLowerCase()) ||
+        c.description.toLowerCase().includes(search.toLowerCase());
+      const matchesCategory = categoryFilter === 'All' || c.category === categoryFilter;
+      return matchesSearch && matchesCategory;
+    });
+  }, [careers, search, categoryFilter]);
+
+  const toggleSelect = (id) => {
+    setSelected((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      if (prev.length >= 3) return prev;
+      return [...prev, id];
+    });
+  };
+
+  const handleCompare = () => {
+    if (selected.length < 2) return;
+    navigate(`/compare?ids=${selected.join(',')}`);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-8">
-      <h1 className="text-3xl font-bold mb-6">Explore Careers</h1>
+      <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
+        <h1 className="text-3xl font-bold">Explore Careers</h1>
+        {selected.length > 0 && (
+          <button
+            onClick={handleCompare}
+            disabled={selected.length < 2}
+            className="bg-blue-600 text-white px-4 py-2 rounded font-semibold hover:bg-blue-700 disabled:opacity-50"
+          >
+            Compare Selected ({selected.length})
+          </button>
+        )}
+      </div>
+
+      <div className="flex flex-col sm:flex-row gap-3 mb-6">
+        <input
+          type="text"
+          placeholder="Search careers..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="flex-1 border rounded p-2 bg-white"
+        />
+        <select
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          className="border rounded p-2 bg-white"
+        >
+          {categories.map((cat) => (
+            <option key={cat} value={cat}>
+              {cat}
+            </option>
+          ))}
+        </select>
+      </div>
 
       {loading && <p className="text-gray-500">Loading careers...</p>}
 
+      {!loading && filteredCareers.length === 0 && (
+        <p className="text-gray-500">No careers match your search.</p>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {careers.map((career) => (
-          <Link
+        {filteredCareers.map((career) => (
+          <div
             key={career._id}
-            to={`/careers/${career._id}`}
-            className="bg-white p-5 rounded-lg shadow hover:shadow-md transition block"
+            className="bg-white p-5 rounded-lg shadow hover:shadow-md transition relative"
           >
-            <span className="text-xs font-semibold text-blue-600 uppercase">
-              {career.category}
-            </span>
-            <h2 className="text-lg font-bold mt-1">{career.name}</h2>
-            <p className="text-gray-600 text-sm mt-2 line-clamp-3">
-              {career.description}
-            </p>
-          </Link>
+            <label className="absolute top-4 right-4 flex items-center gap-1 text-xs">
+              <input
+                type="checkbox"
+                checked={selected.includes(career._id)}
+                onChange={() => toggleSelect(career._id)}
+              />
+              Compare
+            </label>
+            <Link to={`/careers/${career._id}`} className="block pr-16">
+              <span className="text-xs font-semibold text-blue-600 uppercase">
+                {career.category}
+              </span>
+              <h2 className="text-lg font-bold mt-1">{career.name}</h2>
+              <p className="text-gray-600 text-sm mt-2 line-clamp-3">
+                {career.description}
+              </p>
+            </Link>
+          </div>
         ))}
       </div>
     </div>

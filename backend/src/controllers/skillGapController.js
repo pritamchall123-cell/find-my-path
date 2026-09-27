@@ -1,4 +1,4 @@
-const { setTargetCareer, getSkillGap } = require('../services/skillGapService');
+const { setTargetCareer, getSkillGap, getReadinessDashboard } = require('../services/skillGapService');
 
 const setTarget = async (req, res) => {
   try {
@@ -22,4 +22,13 @@ const getGap = async (req, res) => {
   }
 };
 
-module.exports = { setTarget, getGap };
+const getReadiness = async (req, res) => {
+  try {
+    const result = await getReadinessDashboard(req.user.id);
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(error.statusCode || 500).json({ message: error.message || 'Server error' });
+  }
+};
+
+module.exports = { setTarget, getGap, getReadiness };

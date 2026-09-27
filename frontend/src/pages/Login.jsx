@@ -1,6 +1,6 @@
-
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
 import axiosInstance from '../api/axiosInstance';
 
 function Login() {
@@ -29,6 +29,20 @@ function Login() {
     }
   };
 
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setError('');
+    try {
+      const res = await axiosInstance.post('/auth/google', {
+        idToken: credentialResponse.credential,
+      });
+      localStorage.setItem('token', res.data.token);
+      localStorage.setItem('user', JSON.stringify(res.data.user));
+      navigate('/dashboard');
+    } catch (err) {
+      setError('Google login failed');
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <form
@@ -42,6 +56,16 @@ function Login() {
             {error}
           </div>
         )}
+
+        <div className="mb-4 flex justify-center">
+          <GoogleLogin onSuccess={handleGoogleSuccess} onError={() => setError('Google login failed')} />
+        </div>
+
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex-1 h-px bg-gray-200"></div>
+          <span className="text-xs text-gray-400">OR</span>
+          <div className="flex-1 h-px bg-gray-200"></div>
+        </div>
 
         <input
           type="email"
@@ -70,7 +94,12 @@ function Login() {
           {loading ? 'Logging in...' : 'Login'}
         </button>
 
-        <p className="text-sm mt-4 text-center">
+        <p className="text-sm mt-2 text-center">
+          <Link to="/forgot-password" className="text-blue-600 font-medium">
+            Forgot Password?
+          </Link>
+        </p>
+        <p className="text-sm mt-2 text-center">
           Don't have an account?{' '}
           <Link to="/register" className="text-blue-600 font-medium">
             Register

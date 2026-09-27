@@ -4,6 +4,7 @@ const Career = require('../models/Career');
 const Roadmap = require('../models/Roadmap');
 const { getSkillGap } = require('./skillGapService');
 const { buildRoadmapPrompt } = require('../prompts/roadmapPrompt');
+const { createNotification } = require('./notificationService');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
@@ -45,6 +46,16 @@ const generateRoadmap = async (userId) => {
     { new: true, upsert: true }
   );
 
+  try {
+    await createNotification(
+      userId,
+      `Your roadmap for ${career.name} is ready! Check out your first steps.`,
+      'roadmap'
+    );
+  } catch (err) {
+    // notification failure shouldn't break roadmap generation
+  }
+
   return roadmap;
 };
 
@@ -70,6 +81,15 @@ const updateStepStatus = async (userId, stepId, status) => {
 
   step.status = status;
   await roadmap.save();
+
+  if (status === 'completed') {
+    try {
+      await createNotification(userId, `Great work! You completed: ${step.title}`, 'step');
+    } catch (err) {
+      // ignore
+    }
+  }
+
   return roadmap;
 };
 

@@ -19,8 +19,8 @@ const getSkillGap = async (userId) => {
   }
 
   const career = await Career.findById(profile.targetCareer)
-    .populate('coreSkills.skill', 'name')
-    .populate('optionalSkills', 'name');
+    .populate('coreSkills.skill', 'name category')
+    .populate('optionalSkills', 'name category');
 
   if (!career) {
     const error = new Error('Target career not found');
@@ -33,11 +33,12 @@ const getSkillGap = async (userId) => {
     userSkillMap[s.name.toLowerCase()] = s.confidence;
   });
 
-  const buildGapEntry = (skillName, weight, required) => {
+  const buildGapEntry = (skillName, category, weight, required) => {
     const userConfidence = userSkillMap[skillName.toLowerCase()] || 0;
     const readiness = Math.round((userConfidence / 5) * 100);
     return {
       skill: skillName,
+      category: category || 'general',
       required,
       weight: weight || null,
       userConfidence,
@@ -48,11 +49,11 @@ const getSkillGap = async (userId) => {
 
   const coreGaps = career.coreSkills
     .filter((cs) => cs.skill)
-    .map((cs) => buildGapEntry(cs.skill.name, cs.weight, true));
+    .map((cs) => buildGapEntry(cs.skill.name, cs.skill.category, cs.weight, true));
 
   const optionalGaps = career.optionalSkills
     .filter((s) => s)
-    .map((s) => buildGapEntry(s.name, null, false));
+    .map((s) => buildGapEntry(s.name, s.category, null, false));
 
   const allGaps = [...coreGaps, ...optionalGaps].sort((a, b) => b.gap - a.gap);
 
@@ -62,4 +63,32 @@ const getSkillGap = async (userId) => {
   };
 };
 
-module.exports = { setTargetCareer, getSkillGap };
+const getReadinessDashboard = async (userId) => {
+  const { career, gaps } = await getSkillGap(userId);
+
+  const categoryMap = {};
+  gaps.forEach((g) => {
+    if (!categoryMap[g.category]) {
+      categoryMap[g.category] = { total: 0, count: 0 };
+    }
+    categoryMap[g.category].total += g.readiness;
+    categoryMap[g.category].count += 1;
+  });
+
+  const categories = Object.entries(categoryMap).map(([category, data]) => ({
+    category,
+    readiness: Math.round(data.total / data.count),
+  }));
+
+  const overallReadiness = gaps.length > 0
+    ? Math.round(gaps.reduce((sum, g) => sum + g.readiness, 0) / gaps.length)
+    : 0;
+
+  return {
+    career,
+    overallReadiness,
+    categories,
+  };
+};
+
+module.exports = { setTargetCareer, getSkillGap, getReadinessDashboard };
