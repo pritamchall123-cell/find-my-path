@@ -1,7 +1,7 @@
 const Career = require('../models/Career');
 
 const getAllCareers = async () => {
-  const careers = await Career.find().select('name category description entryLevelRoles');
+  const careers = await Career.find().select('name category description entryLevelRoles sector');
   return careers;
 };
 
@@ -11,6 +11,20 @@ const getCareerById = async (id) => {
     .populate('optionalSkills', 'name category')
     .populate('relatedCareers', 'name category');
   return career;
+};
+
+const getCareersByDegree = async (degree) => {
+  const careers = await Career.find({
+    $or: [
+      { eligibleDegrees: { $regex: degree, $options: 'i' } },
+      { eligibleDegrees: 'Any Graduate' },
+    ],
+  }).select('name category description sector examRequired approxStartingSalary careerGrowth entryLevelRoles');
+
+  const government = careers.filter((c) => c.sector === 'government' || c.sector === 'both');
+  const privateSector = careers.filter((c) => c.sector === 'private' || c.sector === 'both');
+
+  return { government, private: privateSector };
 };
 
 const createCareer = async (data) => {
@@ -38,4 +52,11 @@ const deleteCareer = async (id) => {
   return career;
 };
 
-module.exports = { getAllCareers, getCareerById, createCareer, updateCareer, deleteCareer };
+module.exports = {
+  getAllCareers,
+  getCareerById,
+  getCareersByDegree,
+  createCareer,
+  updateCareer,
+  deleteCareer,
+};

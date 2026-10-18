@@ -1,4 +1,4 @@
-const { getAllCareers, getCareerById } = require('../services/careerService');
+const { getAllCareers, getCareerById, getCareersByDegree } = require('../services/careerService');
 
 const listCareers = async (req, res) => {
   try {
@@ -21,4 +21,17 @@ const getCareer = async (req, res) => {
   }
 };
 
-module.exports = { listCareers, getCareer };
+const byDegree = async (req, res) => {
+  try {
+    const degree = req.query.degree;
+    if (!degree) {
+      return res.status(400).json({ message: 'degree query parameter is required' });
+    }
+    const result = await getCareersByDegree(degree);
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Server error' });
+  }
+};
+
+module.exports = { listCareers, getCareer, byDegree };

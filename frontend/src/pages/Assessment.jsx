@@ -6,14 +6,20 @@ function Assessment() {
   const navigate = useNavigate();
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState({});
+  const [reflections, setReflections] = useState({ whatExcitesYou: '', recurringActivity: '' });
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const isClass10 = user.educationLevel === 'class10';
+
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        const res = await axiosInstance.get('/assessment/questions');
+        const res = await axiosInstance.get('/assessment/questions', {
+          params: { educationLevel: user.educationLevel },
+        });
         setQuestions(res.data.questions);
       } catch (err) {
         setError('Failed to load questions');
@@ -44,7 +50,10 @@ function Assessment() {
     }));
 
     try {
-      await axiosInstance.post('/assessment/submit', { answers: formattedAnswers });
+      await axiosInstance.post('/assessment/submit', {
+        answers: formattedAnswers,
+        reflections,
+      });
       navigate('/matches');
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to submit assessment');
@@ -64,9 +73,13 @@ function Assessment() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-8 max-w-2xl mx-auto">
-      <h1 className="text-3xl font-bold mb-2">Career Assessment</h1>
+      <h1 className="text-3xl font-bold mb-2">
+        {isClass10 ? 'Discover Yourself' : 'Career Assessment'}
+      </h1>
       <p className="text-gray-600 mb-6">
-        Answer honestly — this helps us find careers that genuinely fit you.
+        {isClass10
+          ? 'There are no wrong answers here — this just helps us understand what excites you.'
+          : 'Answer honestly — this helps us find careers that genuinely fit you.'}
       </p>
 
       {error && (
@@ -106,6 +119,36 @@ function Assessment() {
             </div>
           </div>
         ))}
+
+        {/* Reflection Prompts */}
+        <div className="bg-blue-50 p-5 rounded-lg border border-blue-100">
+          <h3 className="font-semibold mb-1">A couple of open questions</h3>
+          <p className="text-sm text-gray-600 mb-4">
+            These aren't scored — they just help us (and the AI assistant) actually understand you, not just rate you.
+          </p>
+
+          <label className="block text-sm font-medium mb-1">
+            Was there something in these questions that genuinely excited you? What was it, and why?
+          </label>
+          <textarea
+            value={reflections.whatExcitesYou}
+            onChange={(e) => setReflections({ ...reflections, whatExcitesYou: e.target.value })}
+            placeholder="Optional, but the more honest you are, the more useful this is..."
+            rows={3}
+            className="w-full border rounded p-2 mb-4"
+          />
+
+          <label className="block text-sm font-medium mb-1">
+            Is there something you keep coming back to — a hobby, a subject, a kind of problem — even outside school/college?
+          </label>
+          <textarea
+            value={reflections.recurringActivity}
+            onChange={(e) => setReflections({ ...reflections, recurringActivity: e.target.value })}
+            placeholder="Optional..."
+            rows={3}
+            className="w-full border rounded p-2"
+          />
+        </div>
       </div>
 
       <button

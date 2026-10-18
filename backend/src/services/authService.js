@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
 const sendEmail = require('../utils/sendEmail');
+const { updateStreak } = require('../utils/streakHelper');
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -77,6 +78,9 @@ const loginUser = async ({ email, password }) => {
     throw error;
   }
 
+  updateStreak(user);
+  await user.save();
+
   const token = jwt.sign(
     { id: user._id, role: user.role },
     process.env.JWT_SECRET,
@@ -92,6 +96,8 @@ const loginUser = async ({ email, password }) => {
       role: user.role,
       educationLevel: user.educationLevel,
       isVerified: user.isVerified,
+      currentStreak: user.currentStreak,
+      longestStreak: user.longestStreak,
     },
   };
 };
@@ -119,6 +125,9 @@ const googleLogin = async (idToken) => {
     });
   }
 
+  updateStreak(user);
+  await user.save();
+
   const token = jwt.sign(
     { id: user._id, role: user.role },
     process.env.JWT_SECRET,
@@ -134,6 +143,8 @@ const googleLogin = async (idToken) => {
       role: user.role,
       educationLevel: user.educationLevel,
       isVerified: user.isVerified,
+      currentStreak: user.currentStreak,
+      longestStreak: user.longestStreak,
     },
   };
 };

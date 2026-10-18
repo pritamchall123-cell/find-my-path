@@ -25,6 +25,11 @@ const assessmentQuestionSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    forEducationLevel: {
+      type: String,
+      enum: ['all', 'class10', 'class12', 'college'],
+      default: 'all',
+    },
   },
   { timestamps: true }
 );

@@ -36,9 +36,7 @@ function Resume() {
     formData.append('resume', file);
 
     try {
-      const res = await axiosInstance.post('/resume/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const res = await axiosInstance.post('/resume/upload', formData);
       setResume(res.data.resume);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to analyze resume');

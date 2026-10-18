@@ -1,4 +1,4 @@
-const buildAssistantContext = ({ profile, targetCareerName, skillGap, roadmap }) => {
+const buildAssistantContext = ({ profile, targetCareerName, skillGap, roadmap, reflections }) => {
   let context = `You are the AI Career Assistant on FindMyPath, a career guidance platform for Indian students. Answer the student's question helpfully and conversationally, using ONLY the context below about them. If you don't have relevant data to answer something specific, say so honestly rather than guessing.
 
 STUDENT CONTEXT:
@@ -19,6 +19,12 @@ STUDENT CONTEXT:
   if (roadmap?.steps?.length) {
     const stepTitles = roadmap.steps.map((s) => `${s.title} [${s.status}]`).join(', ');
     context += `Current roadmap steps: ${stepTitles}\n`;
+  }
+  if (reflections?.whatExcitesYou) {
+    context += `In their own words, what excites them: "${reflections.whatExcitesYou}"\n`;
+  }
+  if (reflections?.recurringActivity) {
+    context += `Something they keep coming back to: "${reflections.recurringActivity}"\n`;
   }
 
   if (!profile?.academic && !targetCareerName) {

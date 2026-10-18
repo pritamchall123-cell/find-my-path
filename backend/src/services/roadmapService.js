@@ -5,7 +5,7 @@ const Roadmap = require('../models/Roadmap');
 const { getSkillGap } = require('./skillGapService');
 const { buildRoadmapPrompt } = require('../prompts/roadmapPrompt');
 const { createNotification } = require('./notificationService');
-
+const retryGemini = require('../utils/retryGemini');
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 const generateRoadmap = async (userId) => {
@@ -26,8 +26,8 @@ const generateRoadmap = async (userId) => {
     entryPaths: career.entryPaths || { streams: [], degrees: [] },
   });
 
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-  const result = await model.generateContent(prompt);
+  const model = genAI.getGenerativeModel({ model: 'gemini-3.8-flash' });
+  const result = await retryGemini(() => model.generateContent(prompt));
   const raw = result.response.text();
   const cleaned = raw.replace(/```json|```/g, '').trim();
 

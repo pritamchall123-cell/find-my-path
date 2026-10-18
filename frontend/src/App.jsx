@@ -18,14 +18,21 @@ import Admin from './pages/Admin';
 import VerifyEmail from './pages/VerifyEmail';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import Home from './pages/Home';
+import DegreePaths from './pages/DegreePaths';
+import Settings from './pages/Settings';
+import SavedCareers from './pages/SavedCareers';
+import TopProgressBar from './components/TopProgressBar';
+import Institutions from './pages/Institutions';
+import QualificationGuide from './pages/QualificationGuide';
+import CompareInstitutions from './pages/CompareInstitutions';
+import Scholarships from './pages/Scholarships';
 
-function Home() {
-  return <div className="p-8 text-2xl font-bold">FindMyPath - Home</div>;
-}
 
 function App() {
   return (
     <BrowserRouter>
+      <TopProgressBar />
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
@@ -34,6 +41,11 @@ function App() {
         <Route path="/careers" element={<Careers />} />
         <Route path="/careers/:id" element={<CareerDetail />} />
         <Route path="/compare" element={<Compare />} />
+        <Route path="/degree-paths" element={<DegreePaths />} />
+        <Route path="/institutions" element={<Institutions />} />
+        <Route path="/compare-institutions" element={<CompareInstitutions />} />
+        <Route path="/qualification-guide" element={<QualificationGuide />} />
+        <Route path="/scholarships" element={<Scholarships />} />
         <Route
           path="/dashboard"
           element={
@@ -99,6 +111,14 @@ function App() {
           }
         />
         <Route
+          path="/saved-careers"
+          element={
+            <ProtectedRoute>
+              <SavedCareers />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/admin"
           element={
             <ProtectedRoute>
@@ -108,7 +128,16 @@ function App() {
         />
         <Route path="/verify-email/:token" element={<VerifyEmail />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        
         <Route path="/reset-password/:token" element={<ResetPassword />} />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </BrowserRouter>
   );

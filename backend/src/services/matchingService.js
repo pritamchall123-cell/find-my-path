@@ -21,6 +21,7 @@ const scoreCareerForUser = (career, answerMap) => {
   let totalWeight = 0;
   let earnedScore = 0;
   const breakdown = [];
+  let passionGapSkill = null;
 
   career.coreSkills.forEach(({ skill, weight }) => {
     if (!skill) return;
@@ -30,19 +31,30 @@ const scoreCareerForUser = (career, answerMap) => {
     totalWeight += weight;
     earnedScore += (userScore / 5) * weight;
 
+    const status = userScore >= 4 ? 'strong' : userScore === 3 ? 'moderate' : 'gap';
+
     breakdown.push({
       skill: skill.name,
       weight,
       userScore,
-      status: userScore >= 4 ? 'strong' : userScore === 3 ? 'moderate' : 'gap',
+      status,
     });
+
+    // Detect interest-vs-skill tension: the same category might appear as both
+    // an "interest" question tag and a "skillConfidence" question tag. If the
+    // interest-style score is high but this specific skill's score is low,
+    // flag it — this is the "drawn to it, not there yet" pattern.
+    const interestScore = answerMap[skillTag];
+    if (interestScore >= 4 && userScore <= 2 && !passionGapSkill) {
+      passionGapSkill = skill.name;
+    }
   });
 
   const compatibility = totalWeight > 0
     ? Math.round((earnedScore / totalWeight) * 100)
     : 0;
 
-  return { compatibility, breakdown };
+  return { compatibility, breakdown, passionGapSkill };
 };
 
 const getMatchesForUser = async (userId) => {
@@ -56,13 +68,14 @@ const getMatchesForUser = async (userId) => {
   const careers = await Career.find().populate('coreSkills.skill', 'name category');
 
   const scored = careers.map((career) => {
-    const { compatibility, breakdown } = scoreCareerForUser(career, answerMap);
+    const { compatibility, breakdown, passionGapSkill } = scoreCareerForUser(career, answerMap);
     return {
       careerId: career._id,
       name: career.name,
       category: career.category,
       compatibility,
       breakdown,
+      passionGapSkill,
     };
   });
 

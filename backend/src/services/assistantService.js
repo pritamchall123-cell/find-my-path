@@ -1,13 +1,14 @@
-
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const Profile = require('../models/Profile');
 const Career = require('../models/Career');
 const Roadmap = require('../models/Roadmap');
 const Conversation = require('../models/Conversation');
+const AssessmentResponse = require('../models/AssessmentResponse');
 const { getSkillGap } = require('./skillGapService');
 const { buildAssistantContext } = require('../prompts/careerAssistantPrompt');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const retryGemini = require('../utils/retryGemini');
 
 const sendMessage = async (userId, userMessage) => {
   const profile = await Profile.findOne({ user: userId });
@@ -29,7 +30,10 @@ const sendMessage = async (userId, userMessage) => {
 
   const roadmap = await Roadmap.findOne({ user: userId });
 
-  const context = buildAssistantContext({ profile, targetCareerName, skillGap, roadmap });
+  const latestAssessment = await AssessmentResponse.findOne({ user: userId }).sort({ completedAt: -1 });
+  const reflections = latestAssessment?.reflections || null;
+
+  const context = buildAssistantContext({ profile, targetCareerName, skillGap, roadmap, reflections });
 
   let conversation = await Conversation.findOne({ user: userId });
   if (!conversation) {
@@ -43,8 +47,8 @@ const sendMessage = async (userId, userMessage) => {
 
   const fullPrompt = `${context}\n\nCONVERSATION HISTORY:\n${historyText}\n\nStudent's new message: ${userMessage}\n\nRespond as the assistant, in plain conversational text (not JSON).`;
 
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-  const result = await model.generateContent(fullPrompt);
+  const model = genAI.getGenerativeModel({ model: 'gemini-3.8-flash' });
+  const result = await retryGemini(() => model.generateContent(fullPrompt));
   const aiReply = result.response.text();
 
   conversation.messages.push({ role: 'user', content: userMessage });

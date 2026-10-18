@@ -1,14 +1,18 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axiosInstance from '../api/axiosInstance';
+import PageLoader from '../components/PageLoader';
 
 function Careers() {
   const navigate = useNavigate();
   const [careers, setCareers] = useState([]);
+  const [savedIds, setSavedIds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState([]);
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
+
+  const token = localStorage.getItem('token');
 
   useEffect(() => {
     const fetchCareers = async () => {
@@ -22,6 +26,13 @@ function Careers() {
       }
     };
     fetchCareers();
+
+    if (token) {
+      axiosInstance
+        .get('/skillgap/saved')
+        .then((res) => setSavedIds(res.data.savedCareers.map((c) => c._id)))
+        .catch(() => {});
+    }
   }, []);
 
   const categories = useMemo(() => {
@@ -45,6 +56,24 @@ function Careers() {
       if (prev.length >= 3) return prev;
       return [...prev, id];
     });
+  };
+
+  const toggleSave = async (e, careerId) => {
+    e.preventDefault();
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+    try {
+      const res = await axiosInstance.post('/skillgap/save', { careerId });
+      if (res.data.saved) {
+        setSavedIds((prev) => [...prev, careerId]);
+      } else {
+        setSavedIds((prev) => prev.filter((id) => id !== careerId));
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const handleCompare = () => {
@@ -88,7 +117,7 @@ function Careers() {
         </select>
       </div>
 
-      {loading && <p className="text-gray-500">Loading careers...</p>}
+      {loading && <PageLoader message="Loading careers..." />}
 
       {!loading && filteredCareers.length === 0 && (
         <p className="text-gray-500">No careers match your search.</p>
@@ -100,15 +129,25 @@ function Careers() {
             key={career._id}
             className="bg-white p-5 rounded-lg shadow hover:shadow-md transition relative"
           >
-            <label className="absolute top-4 right-4 flex items-center gap-1 text-xs">
-              <input
-                type="checkbox"
-                checked={selected.includes(career._id)}
-                onChange={() => toggleSelect(career._id)}
-              />
-              Compare
-            </label>
-            <Link to={`/careers/${career._id}`} className="block pr-16">
+            <div className="absolute top-4 right-4 flex items-center gap-2">
+              <button
+                onClick={(e) => toggleSave(e, career._id)}
+                className="text-lg"
+                aria-label="Save career"
+                title={savedIds.includes(career._id) ? 'Remove from saved' : 'Save for later'}
+              >
+                {savedIds.includes(career._id) ? '🔖' : '🏷️'}
+              </button>
+              <label className="flex items-center gap-1 text-xs">
+                <input
+                  type="checkbox"
+                  checked={selected.includes(career._id)}
+                  onChange={() => toggleSelect(career._id)}
+                />
+                Compare
+              </label>
+            </div>
+            <Link to={`/careers/${career._id}`} className="block pr-20">
               <span className="text-xs font-semibold text-blue-600 uppercase">
                 {career.category}
               </span>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axiosInstance from '../api/axiosInstance';
+import PasswordInput from '../components/PasswordInput';
 
 function ResetPassword() {
   const { token } = useParams();
@@ -32,17 +33,19 @@ function ResetPassword() {
         <h1 className="text-2xl font-bold mb-6">Reset Your Password</h1>
 
         {error && (
-          <div className="bg-red-100 text-red-700 p-2 rounded mb-4 text-sm">{error}</div>
+          <div className="bg-red-100 text-red-700 p-2 rounded mb-4 text-sm">
+            {error}
+          </div>
         )}
 
-        <input
-          type="password"
-          placeholder="New password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          className="w-full border rounded p-2 mb-4"
-        />
+        <div className="mb-4">
+          <PasswordInput
+            placeholder="New password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
 
         <button
           type="submit"

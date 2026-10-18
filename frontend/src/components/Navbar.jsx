@@ -1,16 +1,12 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import NotificationBell from './NotificationBell';
+import SideMenu from './SideMenu';
+import LanguageToggle from './LanguageToggle';
 
 function Navbar() {
-  const navigate = useNavigate();
+  const { t } = useTranslation();
   const token = localStorage.getItem('token');
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/login');
-  };
 
   return (
     <nav className="bg-white shadow-sm px-6 py-4 flex justify-between items-center">
@@ -18,53 +14,39 @@ function Navbar() {
         FindMyPath
       </Link>
 
-      <div className="flex gap-4 items-center text-sm font-medium flex-wrap">
-        <Link to="/careers" className="text-gray-700 hover:text-blue-600">
-          Careers
+      <div className="flex gap-4 items-center text-sm font-medium">
+        <Link to="/careers" className="text-gray-700 hover:text-blue-600 hidden sm:block">
+          {t('nav.careers')}
         </Link>
+        <Link to="/degree-paths" className="text-gray-700 hover:text-blue-600 hidden sm:block">
+          {t('nav.degreePaths')}
+        </Link>
+        <Link to="/institutions" className="text-gray-700 hover:text-blue-600 hidden sm:block">
+          Find Colleges
+        </Link>
+        <Link to="/scholarships" className="text-gray-700 hover:text-blue-600 hidden sm:block">
+          Scholarships
+        </Link>
+        <Link to="/qualification-guide" className="text-gray-700 hover:text-blue-600 hidden sm:block">
+          What Can I Do?
+        </Link>
+        <LanguageToggle />
 
         {token ? (
           <>
-            <Link to="/dashboard" className="text-gray-700 hover:text-blue-600">
-              Dashboard
-            </Link>
-            <Link to="/profile" className="text-gray-700 hover:text-blue-600">
-              Profile
-            </Link>
-            <Link to="/assessment" className="text-gray-700 hover:text-blue-600">
-              Assessment
-            </Link>
-            <Link to="/roadmap" className="text-gray-700 hover:text-blue-600">
-              Roadmap
-            </Link>
-            <Link to="/readiness" className="text-gray-700 hover:text-blue-600">
-              Readiness
-            </Link>
-            <Link to="/resume" className="text-gray-700 hover:text-blue-600">
-              Resume
-            </Link>
-            <Link to="/assistant" className="text-gray-700 hover:text-blue-600">
-              Ask AI
-            </Link>
             <NotificationBell />
-            <span className="text-gray-500">Hi, {user.name}</span>
-            <button
-              onClick={handleLogout}
-              className="bg-gray-100 px-3 py-1 rounded hover:bg-gray-200"
-            >
-              Logout
-            </button>
+            <SideMenu />
           </>
         ) : (
           <>
             <Link to="/login" className="text-gray-700 hover:text-blue-600">
-              Login
+              {t('nav.login')}
             </Link>
             <Link
               to="/register"
               className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
             >
-              Sign Up
+              {t('nav.signup')}
             </Link>
           </>
         )}

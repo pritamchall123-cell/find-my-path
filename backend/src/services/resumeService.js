@@ -1,10 +1,10 @@
-
-const pdfParse = require('pdf-parse');
+const { PDFParse } = require('pdf-parse');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const Profile = require('../models/Profile');
 const Career = require('../models/Career');
 const Resume = require('../models/Resume');
 const { buildResumeAnalysisPrompt } = require('../prompts/resumeAnalysisPrompt');
+const retryGemini = require('../utils/retryGemini');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
@@ -19,8 +19,14 @@ const analyzeResume = async (userId, fileBuffer, fileName) => {
   const career = await Career.findById(profile.targetCareer).populate('coreSkills.skill', 'name');
   const requiredSkills = career.coreSkills.filter((cs) => cs.skill).map((cs) => cs.skill.name);
 
-  const pdfData = await pdfParse(fileBuffer);
-  const resumeText = pdfData.text;
+  const parser = new PDFParse({ data: fileBuffer });
+  let resumeText;
+  try {
+    const result = await parser.getText();
+    resumeText = result.text;
+  } finally {
+    await parser.destroy();
+  }
 
   const prompt = buildResumeAnalysisPrompt({
     resumeText,
@@ -28,8 +34,8 @@ const analyzeResume = async (userId, fileBuffer, fileName) => {
     requiredSkills,
   });
 
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-  const result = await model.generateContent(prompt);
+  const model = genAI.getGenerativeModel({ model: 'gemini-3.8-flash' });
+  const result = await retryGemini(() => model.generateContent(prompt));
   const raw = result.response.text();
   const cleaned = raw.replace(/```json|```/g, '').trim();
 

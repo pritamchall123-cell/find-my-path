@@ -48,6 +48,15 @@ function Matches() {
               <p className="text-gray-700 text-sm mb-3">{m.explanation}</p>
             )}
 
+            {m.passionGapSkill && (
+              <div className="bg-amber-50 border border-amber-200 text-amber-900 text-sm p-3 rounded-lg mb-3">
+                💡 You seem drawn to this area, but your confidence in{' '}
+                <strong>{m.passionGapSkill}</strong> is still early-stage — and that's
+                completely normal. That's not a sign this isn't for you; it's just
+                your starting point. A roadmap can close that gap.
+              </div>
+            )}
+
             <div className="flex flex-wrap gap-2 mb-3">
               {m.breakdown.map((b, i) => (
                 <span

@@ -91,4 +91,37 @@ const getReadinessDashboard = async (userId) => {
   };
 };
 
-module.exports = { setTargetCareer, getSkillGap, getReadinessDashboard };
+const toggleSavedCareer = async (userId, careerId) => {
+  const profile = await Profile.findOneAndUpdate(
+    { user: userId },
+    {},
+    { new: true, upsert: true }
+  );
+
+  const alreadySaved = profile.savedCareers.some((id) => id.toString() === careerId);
+
+  if (alreadySaved) {
+    profile.savedCareers = profile.savedCareers.filter((id) => id.toString() !== careerId);
+  } else {
+    profile.savedCareers.push(careerId);
+  }
+
+  await profile.save();
+  return { saved: !alreadySaved, savedCareers: profile.savedCareers };
+};
+
+const getSavedCareers = async (userId) => {
+  const profile = await Profile.findOne({ user: userId }).populate(
+    'savedCareers',
+    'name category description sector'
+  );
+  return profile?.savedCareers || [];
+};
+
+module.exports = {
+  setTargetCareer,
+  getSkillGap,
+  getReadinessDashboard,
+  toggleSavedCareer,
+  getSavedCareers,
+};

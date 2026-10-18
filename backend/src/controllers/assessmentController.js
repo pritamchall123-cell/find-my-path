@@ -6,7 +6,8 @@ const {
 
 const listQuestions = async (req, res) => {
   try {
-    const questions = await getAllQuestions();
+    const educationLevel = req.query.educationLevel;
+    const questions = await getAllQuestions(educationLevel);
     res.status(200).json({ questions });
   } catch (error) {
     res.status(500).json({ message: error.message || 'Server error' });
@@ -15,13 +16,13 @@ const listQuestions = async (req, res) => {
 
 const submit = async (req, res) => {
   try {
-    const { answers } = req.body;
+    const { answers, reflections } = req.body;
 
     if (!answers || !Array.isArray(answers) || answers.length === 0) {
       return res.status(400).json({ message: 'Answers are required' });
     }
 
-    const response = await submitAssessment(req.user.id, answers);
+    const response = await submitAssessment(req.user.id, answers, reflections);
     res.status(201).json({ message: 'Assessment submitted', response });
   } catch (error) {
     res.status(500).json({ message: error.message || 'Server error' });

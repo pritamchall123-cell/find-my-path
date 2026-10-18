@@ -1,0 +1,45 @@
+{  "nav": {
+    "careers": "Careers",
+    "degreePaths": "Degree Paths",
+    "login": "Login",
+    "signup": "Sign Up"
+  },
+  "home": {
+    "badge": "Built for Class 10 to Fresh Graduates",
+    "heroTitle1": "Lost Between Your Skills",
+    "heroTitle2": "and Your Future?",
+    "heroSubtitle": "FindMyPath turns confusion into a clear, step-by-step, AI-guided roadmap — from wherever you stand today to the career you're actually meant for.",
+    "getStarted": "Get Started — It's Free",
+    "exploreCareers": "Explore Careers",
+    "goToDashboard": "Go to Dashboard",
+    "statsCareers": "Careers Mapped",
+    "statsSteps": "Step Journey",
+    "statsSectors": "Sectors: Govt + Private",
+    "statsExplainable": "Explainable Matches",
+    "whoHelpsTitle": "Wherever You Are, We Meet You There",
+    "whoHelpsSubtitle": "You don't need to have it figured out. The platform adapts to exactly where you stand.",
+    "ctaTitle": "Your path is out there. Let's find it.",
+    "ctaSubtitle": "Free to start. Takes a few minutes. No wrong answers.",
+    "ctaButton": "Create Your Free Account"
+  },
+  "login": {
+    "title": "Login to FindMyPath",
+    "email": "Email",
+    "password": "Password",
+    "loginButton": "Login",
+    "loggingIn": "Logging in...",
+    "forgotPassword": "Forgot Password?",
+    "noAccount": "Don't have an account?",
+    "register": "Register"
+  },
+  "register": {
+    "title": "Create your FindMyPath account",
+    "fullName": "Full name",
+    "email": "Email",
+    "password": "Password",
+    "registerButton": "Register",
+    "creating": "Creating account...",
+    "haveAccount": "Already have an account?",
+    "login": "Login"
+  }
+}

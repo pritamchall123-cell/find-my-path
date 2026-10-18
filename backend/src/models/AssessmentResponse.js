@@ -13,6 +13,10 @@ const assessmentResponseSchema = new mongoose.Schema(
         selectedValue: { type: String },
       },
     ],
+    reflections: {
+      whatExcitesYou: { type: String, trim: true },
+      recurringActivity: { type: String, trim: true },
+    },
     completedAt: {
       type: Date,
       default: Date.now,

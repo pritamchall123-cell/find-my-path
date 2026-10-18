@@ -36,6 +36,12 @@ const profileSchema = new mongoose.Schema(
       ref: 'Career',
       default: null,
     },
+    savedCareers: [
+      { type: mongoose.Schema.Types.ObjectId, ref: 'Career' },
+    ],
+    savedInstitutions: [
+      { type: mongoose.Schema.Types.ObjectId, ref: 'Institution' },
+    ],
   },
   { timestamps: true }
 );
