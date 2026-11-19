@@ -11,6 +11,8 @@ function Careers() {
   const [selected, setSelected] = useState([]);
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
+  const [sectorFilter, setSectorFilter] = useState('All');
+  const [skillFilter, setSkillFilter] = useState('All');
 
   const token = localStorage.getItem('token');
 
@@ -40,15 +42,32 @@ function Careers() {
     return ['All', ...unique.sort()];
   }, [careers]);
 
+  const sectors = useMemo(() => {
+    const unique = [...new Set(careers.filter((c) => c.sectorRef).map((c) => c.sectorRef.name))];
+    return ['All', ...unique.sort()];
+  }, [careers]);
+
+  const skills = useMemo(() => {
+    const all = careers.flatMap((c) =>
+      (c.coreSkills || []).filter((cs) => cs.skill).map((cs) => cs.skill.name)
+    );
+    const unique = [...new Set(all)];
+    return ['All', ...unique.sort()];
+  }, [careers]);
+
   const filteredCareers = useMemo(() => {
     return careers.filter((c) => {
       const matchesSearch =
         c.name.toLowerCase().includes(search.toLowerCase()) ||
         c.description.toLowerCase().includes(search.toLowerCase());
       const matchesCategory = categoryFilter === 'All' || c.category === categoryFilter;
-      return matchesSearch && matchesCategory;
+      const matchesSector = sectorFilter === 'All' || c.sectorRef?.name === sectorFilter;
+      const matchesSkill =
+        skillFilter === 'All' ||
+        (c.coreSkills || []).some((cs) => cs.skill?.name === skillFilter);
+      return matchesSearch && matchesCategory && matchesSector && matchesSkill;
     });
-  }, [careers, search, categoryFilter]);
+  }, [careers, search, categoryFilter, sectorFilter, skillFilter]);
 
   const toggleSelect = (id) => {
     setSelected((prev) => {
@@ -81,6 +100,18 @@ function Careers() {
     navigate(`/compare?ids=${selected.join(',')}`);
   };
 
+  const clearFilters = () => {
+    setSearch('');
+    setCategoryFilter('All');
+    setSectorFilter('All');
+    setSkillFilter('All');
+  };
+
+  const hasActiveFilters =
+    search || categoryFilter !== 'All' || sectorFilter !== 'All' || skillFilter !== 'All';
+
+  if (loading) return <PageLoader message="Loading careers..." />;
+
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
@@ -96,31 +127,57 @@ function Careers() {
         )}
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3 mb-6">
+      <div className="bg-white p-4 rounded-lg shadow mb-6 space-y-3">
         <input
           type="text"
           placeholder="Search careers..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 border rounded p-2 bg-white"
+          className="w-full border rounded p-2"
         />
-        <select
-          value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value)}
-          className="border rounded p-2 bg-white"
-        >
-          {categories.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat}
-            </option>
-          ))}
-        </select>
+        <div className="flex flex-wrap gap-3">
+          <select
+            value={sectorFilter}
+            onChange={(e) => setSectorFilter(e.target.value)}
+            className="border rounded p-2 text-sm"
+          >
+            {sectors.map((s) => (
+              <option key={s} value={s}>{s === 'All' ? 'All Sectors' : s}</option>
+            ))}
+          </select>
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="border rounded p-2 text-sm"
+          >
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>{cat === 'All' ? 'All Categories' : cat}</option>
+            ))}
+          </select>
+          <select
+            value={skillFilter}
+            onChange={(e) => setSkillFilter(e.target.value)}
+            className="border rounded p-2 text-sm"
+          >
+            {skills.map((s) => (
+              <option key={s} value={s}>{s === 'All' ? 'Any Skill' : s}</option>
+            ))}
+          </select>
+          {hasActiveFilters && (
+            <button
+              onClick={clearFilters}
+              className="text-sm text-gray-500 hover:text-gray-700 underline"
+            >
+              Clear filters
+            </button>
+          )}
+        </div>
       </div>
 
-      {loading && <PageLoader message="Loading careers..." />}
+      <p className="text-sm text-gray-500 mb-4">{filteredCareers.length} career(s) found</p>
 
-      {!loading && filteredCareers.length === 0 && (
-        <p className="text-gray-500">No careers match your search.</p>
+      {filteredCareers.length === 0 && (
+        <p className="text-gray-500">No careers match your filters.</p>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -151,6 +208,9 @@ function Careers() {
               <span className="text-xs font-semibold text-blue-600 uppercase">
                 {career.category}
               </span>
+              {career.sectorRef && (
+                <span className="text-xs text-gray-400 ml-2">· {career.sectorRef.name}</span>
+              )}
               <h2 className="text-lg font-bold mt-1">{career.name}</h2>
               <p className="text-gray-600 text-sm mt-2 line-clamp-3">
                 {career.description}

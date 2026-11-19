@@ -1,4 +1,3 @@
-
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -19,13 +18,25 @@ const institutionRoutes = require('./routes/institutionRoutes');
 const guideRoutes = require('./routes/guideRoutes');
 const milestoneRoutes = require('./routes/milestoneRoutes');
 const scholarshipRoutes = require('./routes/scholarshipRoutes');
+const portfolioRoutes = require('./routes/portfolioRoutes');
+const scenarioRoutes = require('./routes/scenarioRoutes');
+const directoryRoutes = require('./routes/directoryRoutes');
+const educationRoutes = require('./routes/educationRoutes');
+const timelineRoutes = require('./routes/timelineRoutes');
+const achievementRoutes = require('./routes/achievementRoutes');
+const careerGoalRoutes = require('./routes/careerGoalRoutes');
 
 connectDB();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors({ origin: 'http://localhost:5173' }));
+const allowedOrigins = [
+  'http://localhost:5173',
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
+app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
 
 app.get('/', (req, res) => {
@@ -48,6 +59,13 @@ app.use('/api/institutions', institutionRoutes);
 app.use('/api/guides', guideRoutes);
 app.use('/api/milestones', milestoneRoutes);
 app.use('/api/scholarships', scholarshipRoutes);
+app.use('/api/portfolio', portfolioRoutes);
+app.use('/api/scenarios', scenarioRoutes);
+app.use('/api/directory', directoryRoutes);
+app.use('/api/education', educationRoutes);
+app.use('/api/timeline', timelineRoutes);
+app.use('/api/achievements', achievementRoutes);
+app.use('/api/goals', careerGoalRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

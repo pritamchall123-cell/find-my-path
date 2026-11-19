@@ -1,4 +1,5 @@
 const { getAllCareers, getCareerById, getCareersByDegree } = require('../services/careerService');
+const { getPlanB } = require('../services/planBService');
 
 const listCareers = async (req, res) => {
   try {
@@ -34,4 +35,13 @@ const byDegree = async (req, res) => {
   }
 };
 
-module.exports = { listCareers, getCareer, byDegree };
+const getPlanBForCareer = async (req, res) => {
+  try {
+    const planB = await getPlanB(req.params.id);
+    res.status(200).json({ planB });
+  } catch (error) {
+    res.status(error.statusCode || 500).json({ message: error.message || 'Server error' });
+  }
+};
+
+module.exports = { listCareers, getCareer, byDegree, getPlanBForCareer };

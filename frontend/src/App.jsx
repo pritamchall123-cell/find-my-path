@@ -27,6 +27,17 @@ import Institutions from './pages/Institutions';
 import QualificationGuide from './pages/QualificationGuide';
 import CompareInstitutions from './pages/CompareInstitutions';
 import Scholarships from './pages/Scholarships';
+import Portfolio from './pages/Portfolio';
+import SkillGapAnalyzer from './pages/SkillGapAnalyzer';
+import PathPilot from './pages/PathPilot';
+import CareerDirectory from './pages/CareerDirectory';
+import SectorDetail from './pages/SectorDetail';
+import StatePortalDirectory from './pages/StatePortalDirectory';
+import ScholarshipFinder from './pages/ScholarshipFinder';
+import EducationHistory from './pages/EducationHistory';
+import JourneyTimeline from './pages/JourneyTimeline';
+import Achievements from './pages/Achievements';
+import CareerGoals from './pages/CareerGoals';
 
 
 function App() {
@@ -43,14 +54,59 @@ function App() {
         <Route path="/compare" element={<Compare />} />
         <Route path="/degree-paths" element={<DegreePaths />} />
         <Route path="/institutions" element={<Institutions />} />
+        <Route path="/directory" element={<CareerDirectory />} />
+        <Route path="/directory/:slug" element={<SectorDetail />} />
         <Route path="/compare-institutions" element={<CompareInstitutions />} />
         <Route path="/qualification-guide" element={<QualificationGuide />} />
         <Route path="/scholarships" element={<Scholarships />} />
+        <Route path="/scholarships/states" element={<StatePortalDirectory />} />
+        <Route path="/scholarships/finder" element={<ScholarshipFinder />} />
+        
+        <Route
+          path="/portfolio"
+          element={
+            <ProtectedRoute>
+              <Portfolio />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/dashboard"
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/education-history"
+          element={
+            <ProtectedRoute>
+              <EducationHistory />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/journey"
+          element={
+            <ProtectedRoute>
+              <JourneyTimeline />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/achievements"
+          element={
+            <ProtectedRoute>
+              <Achievements />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/goals"
+          element={
+            <ProtectedRoute>
+              <CareerGoals />
             </ProtectedRoute>
           }
         />
@@ -67,6 +123,22 @@ function App() {
           element={
             <ProtectedRoute>
               <Roadmap />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/pathpilot"
+          element={
+            <ProtectedRoute>
+              <PathPilot />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/skill-gap"
+          element={
+            <ProtectedRoute>
+              <SkillGapAnalyzer />
             </ProtectedRoute>
           }
         />

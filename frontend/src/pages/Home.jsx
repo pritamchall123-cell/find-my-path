@@ -105,7 +105,7 @@ function Home() {
                   Get Started — It's Free
                 </Link>
                 <Link
-                  to="/careers"
+                  to="/directory"
                   className="border-2 border-white/70 backdrop-blur-sm px-8 py-4 rounded-xl font-bold hover:bg-white/10 transition-all hover:scale-105 active:scale-95"
                 >
                   Explore Careers

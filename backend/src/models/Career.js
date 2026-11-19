@@ -7,10 +7,29 @@ const careerSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    slug: {
+      type: String,
+      trim: true,
+      unique: true,
+      sparse: true,
+    },
     category: {
       type: String,
       trim: true,
     },
+    sectorRef: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Sector',
+      default: null,
+    },
+    categoryRef: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Category',
+      default: null,
+    },
+    secondarySectors: [
+      { type: mongoose.Schema.Types.ObjectId, ref: 'Sector' },
+    ],
     sector: {
       type: String,
       enum: ['government', 'private', 'both'],

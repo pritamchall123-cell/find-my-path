@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axiosInstance from '../api/axiosInstance';
+import { useState as useStatePlanB } from 'react';
 
 function CareerDetail() {
   const { id } = useParams();
@@ -9,6 +10,9 @@ function CareerDetail() {
   const [loading, setLoading] = useState(true);
   const [settingTarget, setSettingTarget] = useState(false);
   const [message, setMessage] = useState('');
+  const [planB, setPlanB] = useStatePlanB(null);
+  const [loadingPlanB, setLoadingPlanB] = useStatePlanB(false);
+
 
   useEffect(() => {
     const fetchCareer = async () => {
@@ -24,6 +28,18 @@ function CareerDetail() {
     fetchCareer();
   }, [id]);
 
+  const fetchPlanB = async () => {
+    setLoadingPlanB(true);
+    try {
+      const res = await axiosInstance.get(`/careers/${id}/plan-b`);
+      setPlanB(res.data.planB);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingPlanB(false);
+    }
+  };
+
   const handleSetTarget = async () => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -34,7 +50,7 @@ function CareerDetail() {
     setMessage('');
     try {
       await axiosInstance.post('/skillgap/target', { careerId: id });
-      setMessage('Target career set! Go to your dashboard to generate a roadmap.');
+      setMessage('Saved as your primary goal and target career. Manage all your goals on the Career Goals page, or generate a roadmap on the Roadmap page.');
     } catch (err) {
       setMessage(err.response?.data?.message || 'Something went wrong');
     } finally {
@@ -166,6 +182,61 @@ function CareerDetail() {
           </ul>
         </div>
       )}
+
+      <div className="mb-6 animate-fade-in-up delay-500">
+        {!planB && (
+          <button
+            onClick={fetchPlanB}
+            disabled={loadingPlanB}
+            className="text-sm text-indigo-600 font-medium hover:underline"
+          >
+            {loadingPlanB ? 'Loading...' : '🔀 What if this doesn\'t work out? See Plan B →'}
+          </button>
+        )}
+
+        {planB && (
+          <div className="bg-indigo-50 p-5 rounded-lg space-y-4">
+            <h3 className="font-bold text-indigo-900">Plan B — Realistic Alternatives</h3>
+
+            <div>
+              <h4 className="text-xs font-semibold text-indigo-700 uppercase mb-1">If you don't meet eligibility</h4>
+              {planB.ifNotEligible.map((note, i) => (
+                <p key={i} className="text-sm text-indigo-900 mb-1">• {note}</p>
+              ))}
+            </div>
+
+            <div>
+              <h4 className="text-xs font-semibold text-indigo-700 uppercase mb-1">If you can't afford it</h4>
+              {planB.ifCantAfford.map((note, i) => (
+                <p key={i} className="text-sm text-indigo-900 mb-1">• {note}</p>
+              ))}
+            </div>
+
+            {planB.ifInterestsChange.length > 0 && (
+              <div>
+                <h4 className="text-xs font-semibold text-indigo-700 uppercase mb-1">If your interests change</h4>
+                <div className="flex flex-wrap gap-2">
+                  {planB.ifInterestsChange.map((alt, i) => (
+                    <Link
+                      key={i}
+                      to={`/careers/${alt.careerId}`}
+                      className="text-xs bg-white text-indigo-700 px-2 py-1 rounded-full hover:bg-indigo-100"
+                      title={alt.reason}
+                    >
+                      {alt.name}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="border-t border-indigo-200 pt-3">
+              <h4 className="text-xs font-semibold text-indigo-700 uppercase mb-1">Suggested Next Action</h4>
+              <p className="text-sm text-indigo-900">{planB.nextAction}</p>
+            </div>
+          </div>
+        )}
+      </div>
 
       <p className="text-xs text-gray-400 mb-4 italic">
         Salary, growth, and outlook figures are general platform guidance based on typical market trends — not a guarantee. Always verify with current sources before making major decisions.

@@ -2,37 +2,46 @@ const mongoose = require('mongoose');
 
 const scholarshipSchema = new mongoose.Schema(
   {
-    name: {
+    name: { type: String, required: true, trim: true },
+    slug: { type: String, trim: true, unique: true, sparse: true },
+    providerType: {
       type: String,
+      enum: ['central_government', 'state_government', 'private', 'foundation', 'university', 'other'],
       required: true,
-      trim: true,
     },
-    provider: {
+    providerName: { type: String, trim: true },
+    educationLevels: [{ type: String, trim: true }],
+    eligibleCourses: [{ type: String, trim: true }],
+    eligibleStates: [{ type: String, trim: true }],
+    domicileRules: { type: String, trim: true },
+    eligibleCategories: [{ type: String, trim: true }],
+    minimumMarks: { type: String, trim: true },
+    incomeLimit: { type: String, trim: true },
+    benefitAmount: { type: String, trim: true },
+    benefitFrequency: {
       type: String,
-      required: true,
-      trim: true,
+      enum: ['monthly', 'annual', 'one_time', 'course_duration', 'not_specified'],
+      default: 'not_specified',
     },
-    type: {
+    freshApplicationsAllowed: { type: Boolean, default: null },
+    renewalAllowed: { type: Boolean, default: null },
+    applicationStatus: {
       type: String,
-      enum: ['government', 'private', 'institutional'],
-      default: 'government',
+      enum: ['open', 'upcoming', 'closed', 'expected', 'paused', 'discontinued', 'unverified'],
+      default: 'unverified',
     },
-    eligibleEducationLevels: [{ type: String, trim: true }],
-    eligibilityCriteria: [{ type: String, trim: true }],
-    awardDetails: { type: String, trim: true },
-    applicationOpens: { type: String, trim: true },
-    applicationCloses: { type: String, trim: true },
-    requiredDocuments: [{ type: String, trim: true }],
-    applicationUrl: { type: String, trim: true },
-    dataProvenance: {
-      source: { type: String, trim: true, default: 'Platform-curated (general knowledge)' },
-      verificationStatus: {
-        type: String,
-        enum: ['verified', 'unverified', 'user-submitted'],
-        default: 'unverified',
-      },
-      lastVerifiedDate: { type: Date, default: null },
+    applicationStartDate: { type: String, trim: true },
+    applicationDeadline: { type: String, trim: true },
+    officialApplicationUrl: { type: String, trim: true },
+    officialGuidelinesUrl: { type: String, trim: true },
+    sourceType: {
+      type: String,
+      enum: ['official', 'verified_partner', 'secondary_discovery'],
+      default: 'secondary_discovery',
     },
+    lastVerifiedAt: { type: Date, default: null },
+    academicYear: { type: String, trim: true, default: '2026-27' },
+    verificationNotes: { type: String, trim: true },
   },
   { timestamps: true }
 );

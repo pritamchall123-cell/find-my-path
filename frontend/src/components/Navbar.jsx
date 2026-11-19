@@ -15,8 +15,8 @@ function Navbar() {
       </Link>
 
       <div className="flex gap-4 items-center text-sm font-medium">
-        <Link to="/careers" className="text-gray-700 hover:text-blue-600 hidden sm:block">
-          {t('nav.careers')}
+        <Link to="/directory" className="text-gray-700 hover:text-blue-600 hidden sm:block">
+          Directory
         </Link>
         <Link to="/degree-paths" className="text-gray-700 hover:text-blue-600 hidden sm:block">
           {t('nav.degreePaths')}
@@ -26,9 +26,6 @@ function Navbar() {
         </Link>
         <Link to="/scholarships" className="text-gray-700 hover:text-blue-600 hidden sm:block">
           Scholarships
-        </Link>
-        <Link to="/qualification-guide" className="text-gray-700 hover:text-blue-600 hidden sm:block">
-          What Can I Do?
         </Link>
         <LanguageToggle />
 

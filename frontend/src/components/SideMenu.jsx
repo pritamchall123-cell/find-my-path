@@ -27,9 +27,14 @@ function SideMenu() {
       label: 'My Journey',
       links: [
         { to: '/profile', icon: '👤', label: 'My Profile' },
+        { to: '/education-history', icon: '🎓', label: 'Education History' },
+        { to: '/journey', icon: '🧭', label: 'My Journey Timeline' },
+        { to: '/achievements', icon: '🏅', label: 'My Achievements' },
+                { to: '/goals', icon: '🎯', label: 'Career Goals' },
         { to: '/dashboard', icon: '📊', label: 'Dashboard' },
         { to: '/roadmap', icon: '🗺️', label: 'My Roadmap' },
         { to: '/readiness', icon: '📈', label: 'Career Readiness' },
+        { to: '/skill-gap', icon: '🔍', label: 'Skill Gap Analysis' },
         { to: '/saved-careers', icon: '🔖', label: 'Saved Careers' },
       ],
     },
@@ -37,6 +42,8 @@ function SideMenu() {
       label: 'Tools',
       links: [
         { to: '/resume', icon: '📄', label: 'Resume Analyzer' },
+        { to: '/portfolio', icon: '🛠️', label: 'My Portfolio' },
+        { to: '/pathpilot', icon: '🧭', label: 'PathPilot' },
         { to: '/degree-paths', icon: '🏛️', label: 'Degree Paths' },
         { to: '/qualification-guide', icon: '📋', label: 'What Can I Do Now?' },
         { to: '/institutions', icon: '🏫', label: 'Find Colleges' },

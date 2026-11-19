@@ -1,13 +1,53 @@
 const Profile = require('../models/Profile');
 const Career = require('../models/Career');
+const Portfolio = require('../models/Portfolio');
+const CareerGoal = require('../models/CareerGoal');
+const { createGoal, updateGoal, setPrimaryGoal } = require('./careerGoalService');
 
 const setTargetCareer = async (userId, careerId) => {
-  const profile = await Profile.findOneAndUpdate(
-    { user: userId },
-    { targetCareer: careerId },
-    { new: true, upsert: true }
-  );
+  let goal = await CareerGoal.findOne({ user: userId, career: careerId });
+
+  if (!goal || goal.status === 'dropped') {
+    // New goal, or a dropped one coming back (createGoal reactivates it)
+    goal = await createGoal(userId, careerId, { status: 'active' });
+  } else if (goal.status !== 'active') {
+    // Choosing it as your target means you're actively working toward it
+    goal = await updateGoal(userId, goal._id, { status: 'active' });
+  }
+
+  // Marks it primary and syncs Profile.targetCareer
+  await setPrimaryGoal(userId, goal._id);
+
+  const profile = await Profile.findOne({ user: userId });
   return profile;
+};
+
+const determineStatus = (skillName, userConfidence, portfolioEntries) => {
+  const skillLower = skillName.toLowerCase();
+
+  const completedEvidence = portfolioEntries.filter(
+    (e) =>
+      e.status === 'completed' &&
+      e.skillsDemonstrated.some((s) => s.toLowerCase() === skillLower)
+  );
+  if (completedEvidence.length > 0) {
+    return { status: 'completed', evidence: completedEvidence };
+  }
+
+  const inProgressEvidence = portfolioEntries.filter(
+    (e) =>
+      e.status === 'in_progress' &&
+      e.skillsDemonstrated.some((s) => s.toLowerCase() === skillLower)
+  );
+  if (inProgressEvidence.length > 0) {
+    return { status: 'in_progress', evidence: inProgressEvidence };
+  }
+
+  if (userConfidence > 0) {
+    return { status: 'self_reported', evidence: [] };
+  }
+
+  return { status: 'not_started', evidence: [] };
 };
 
 const getSkillGap = async (userId) => {
@@ -33,9 +73,13 @@ const getSkillGap = async (userId) => {
     userSkillMap[s.name.toLowerCase()] = s.confidence;
   });
 
+  const portfolioEntries = await Portfolio.find({ user: userId }).lean();
+
   const buildGapEntry = (skillName, category, weight, required) => {
     const userConfidence = userSkillMap[skillName.toLowerCase()] || 0;
     const readiness = Math.round((userConfidence / 5) * 100);
+    const { status, evidence } = determineStatus(skillName, userConfidence, portfolioEntries);
+
     return {
       skill: skillName,
       category: category || 'general',
@@ -44,6 +88,8 @@ const getSkillGap = async (userId) => {
       userConfidence,
       readiness,
       gap: 100 - readiness,
+      status,
+      evidence: evidence.map((e) => ({ id: e._id, title: e.title, links: e.links })),
     };
   };
 
@@ -60,6 +106,8 @@ const getSkillGap = async (userId) => {
   return {
     career: career.name,
     gaps: allGaps,
+    methodology:
+      'Readiness is calculated from your self-rated skill confidence (1-5), converted to a percentage. A skill marked "completed" has at least one finished portfolio entry as evidence; "in progress" has an active entry; "self-reported" means you rated it but have no portfolio evidence yet; "not started" means no rating or evidence exists. This reflects your own input, not an independent assessment of actual competence — treat it as a planning tool, not a certification.',
   };
 };
 

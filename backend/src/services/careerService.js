@@ -1,7 +1,11 @@
 const Career = require('../models/Career');
 
 const getAllCareers = async () => {
-  const careers = await Career.find().select('name category description entryLevelRoles sector');
+  const careers = await Career.find()
+    .select('name category description entryLevelRoles sector sectorRef categoryRef coreSkills')
+    .populate('sectorRef', 'name slug')
+    .populate('categoryRef', 'name slug')
+    .populate('coreSkills.skill', 'name');
   return careers;
 };
 
