@@ -1,11 +1,8 @@
 import { Link } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import NotificationBell from './NotificationBell';
 import SideMenu from './SideMenu';
-import LanguageToggle from './LanguageToggle';
 
 function Navbar() {
-  const { t } = useTranslation();
   const token = localStorage.getItem('token');
 
   return (
@@ -19,7 +16,7 @@ function Navbar() {
           Directory
         </Link>
         <Link to="/degree-paths" className="text-gray-700 hover:text-blue-600 hidden sm:block">
-          {t('nav.degreePaths')}
+          {t('Degree Paths')}
         </Link>
         <Link to="/institutions" className="text-gray-700 hover:text-blue-600 hidden sm:block">
           Find Colleges
@@ -27,7 +24,6 @@ function Navbar() {
         <Link to="/scholarships" className="text-gray-700 hover:text-blue-600 hidden sm:block">
           Scholarships
         </Link>
-        <LanguageToggle />
 
         {token ? (
           <>
@@ -37,13 +33,13 @@ function Navbar() {
         ) : (
           <>
             <Link to="/login" className="text-gray-700 hover:text-blue-600">
-              {t('nav.login')}
+              {t('Login')}
             </Link>
             <Link
               to="/register"
               className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
             >
-              {t('nav.signup')}
+              {t('Sign up')}
             </Link>
           </>
         )}

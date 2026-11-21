@@ -1,12 +1,10 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
-import { useTranslation } from 'react-i18next';
 import axiosInstance from '../api/axiosInstance';
 import PasswordInput from '../components/PasswordInput';
 
 function Register() {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const [form, setForm] = useState({
     name: '',
@@ -43,7 +41,7 @@ function Register() {
       });
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
-      navigate('/dashboard');
+      navigate('/');
     } catch (err) {
       setError('Google sign-up failed');
     }
@@ -55,7 +53,7 @@ function Register() {
         onSubmit={handleSubmit}
         className="bg-white p-8 rounded-lg shadow-md w-full max-w-md"
       >
-        <h1 className="text-2xl font-bold mb-6">{t('register.title')}</h1>
+        <h1 className="text-2xl font-bold mb-6">Create your FindMyPath account</h1>
 
         {error && (
           <div className="bg-red-100 text-red-700 p-2 rounded mb-4 text-sm">
@@ -80,7 +78,7 @@ function Register() {
         <input
           type="text"
           name="name"
-          placeholder={t('register.fullName')}
+          placeholder="Full name"
           value={form.name}
           onChange={handleChange}
           required
@@ -89,7 +87,7 @@ function Register() {
         <input
           type="email"
           name="email"
-          placeholder={t('register.email')}
+          placeholder="Email"
           value={form.email}
           onChange={handleChange}
           required
@@ -98,7 +96,7 @@ function Register() {
         <div className="mb-4">
           <PasswordInput
             name="password"
-            placeholder={t('register.password')}
+            placeholder="Password"
             value={form.password}
             onChange={handleChange}
             required
@@ -121,13 +119,13 @@ function Register() {
           disabled={loading}
           className="w-full bg-blue-600 text-white rounded p-2 font-semibold hover:bg-blue-700 disabled:opacity-50"
         >
-          {loading ? t('register.creating') : t('register.registerButton')}
+          {loading ? 'Creating account...' : 'Register'}
         </button>
 
         <p className="text-sm mt-4 text-center">
-          {t('register.haveAccount')}{' '}
+          Already have an account?{' '}
           <Link to="/login" className="text-blue-600 font-medium">
-            {t('register.login')}
+            Login
           </Link>
         </p>
       </form>

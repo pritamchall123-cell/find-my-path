@@ -1,12 +1,10 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
-import { useTranslation } from 'react-i18next';
 import axiosInstance from '../api/axiosInstance';
 import PasswordInput from '../components/PasswordInput';
 
 function Login() {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
@@ -24,7 +22,7 @@ function Login() {
       const res = await axiosInstance.post('/auth/login', form);
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
-      navigate('/dashboard');
+      navigate('/');
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed');
     } finally {
@@ -40,7 +38,7 @@ function Login() {
       });
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
-      navigate('/dashboard');
+      navigate('/');
     } catch (err) {
       setError('Google login failed');
     }
@@ -52,7 +50,7 @@ function Login() {
         onSubmit={handleSubmit}
         className="bg-white p-8 rounded-lg shadow-md w-full max-w-md"
       >
-        <h1 className="text-2xl font-bold mb-6">{t('login.title')}</h1>
+        <h1 className="text-2xl font-bold mb-6">{t('Login to FindMyPath')}</h1>
 
         {error && (
           <div className="bg-red-100 text-red-700 p-2 rounded mb-4 text-sm">
@@ -73,7 +71,7 @@ function Login() {
         <input
           type="email"
           name="email"
-          placeholder={t('login.email')}
+          placeholder="Email"
           value={form.email}
           onChange={handleChange}
           required
@@ -82,7 +80,7 @@ function Login() {
         <div className="mb-4">
           <PasswordInput
             name="password"
-            placeholder={t('login.password')}
+            placeholder="Password"
             value={form.password}
             onChange={handleChange}
             required
@@ -94,18 +92,18 @@ function Login() {
           disabled={loading}
           className="w-full bg-blue-600 text-white rounded p-2 font-semibold hover:bg-blue-700 disabled:opacity-50"
         >
-          {loading ? t('login.loggingIn') : t('login.loginButton')}
+          {loading ? 'Logging in...' : 'Login'}
         </button>
 
         <p className="text-sm mt-2 text-center">
           <Link to="/forgot-password" className="text-blue-600 font-medium">
-            {t('login.forgotPassword')}
+            Forgot Password?
           </Link>
         </p>
         <p className="text-sm mt-2 text-center">
-          {t('login.noAccount')}{' '}
+          Don't have an account?{' '}
           <Link to="/register" className="text-blue-600 font-medium">
-            {t('login.register')}
+            Register
           </Link>
         </p>
       </form>
