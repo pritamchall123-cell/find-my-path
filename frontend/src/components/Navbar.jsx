@@ -16,7 +16,7 @@ function Navbar() {
           Directory
         </Link>
         <Link to="/degree-paths" className="text-gray-700 hover:text-blue-600 hidden sm:block">
-          {t('Degree Paths')}
+          Degree Paths
         </Link>
         <Link to="/institutions" className="text-gray-700 hover:text-blue-600 hidden sm:block">
           Find Colleges
@@ -33,13 +33,13 @@ function Navbar() {
         ) : (
           <>
             <Link to="/login" className="text-gray-700 hover:text-blue-600">
-              {t('Login')}
+              Login
             </Link>
             <Link
               to="/register"
               className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
             >
-              {t('Sign up')}
+              Sign up
             </Link>
           </>
         )}
