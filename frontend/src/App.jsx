@@ -38,13 +38,15 @@ import EducationHistory from './pages/EducationHistory';
 import JourneyTimeline from './pages/JourneyTimeline';
 import Achievements from './pages/Achievements';
 import CareerGoals from './pages/CareerGoals';
-
+import Footer from './components/Footer';
 
 function App() {
   return (
     <BrowserRouter>
+    <div className="min-h-screen flex flex-col">
       <TopProgressBar />
       <Navbar />
+      <div className="flex-1">
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/register" element={<Register />} />
@@ -211,6 +213,9 @@ function App() {
           }
         />
       </Routes>
+      </div>
+      <Footer/>
+    </div>
     </BrowserRouter>
   );
 }
