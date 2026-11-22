@@ -11,6 +11,7 @@ const {
   editInstitution,
   removeInstitution,
   getStats,
+  getUsers,
 } = require('../controllers/adminController');
 
 const router = express.Router();
@@ -18,6 +19,7 @@ const router = express.Router();
 router.use(protect, adminOnly);
 
 router.get('/stats', getStats);
+router.get('/users', getUsers);
 
 router.post('/careers', addCareer);
 router.put('/careers/:id', editCareer);

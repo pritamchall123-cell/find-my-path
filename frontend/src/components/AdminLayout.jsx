@@ -3,6 +3,7 @@ import ErrorBoundary from './ErrorBoundary';
 
 const links = [
   { to: '/admin', label: 'Overview', icon: '📊', end: true },
+  { to: '/admin/users', label: 'Users', icon: '👥' },
   { to: '/admin/colleges', label: 'Colleges', icon: '🏫' },
   { to: '/admin/careers', label: 'Careers', icon: '💼' },
 ];

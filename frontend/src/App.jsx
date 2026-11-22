@@ -43,6 +43,7 @@ import AdminLayout from './components/AdminLayout';
 import AdminOverview from './pages/AdminOverview';
 import AdminColleges from './pages/AdminColleges';
 import InstitutionDetail from './pages/InstitutionDetail';
+import AdminUsers from './pages/AdminUsers';
 
 function App() {
   return (
@@ -69,7 +70,7 @@ function App() {
         <Route path="/scholarships" element={<Scholarships />} />
         <Route path="/scholarships/states" element={<StatePortalDirectory />} />
         <Route path="/scholarships/finder" element={<ScholarshipFinder />} />
-        
+        <Route path="users" element={<AdminUsers />} />
         <Route
           path="/portfolio"
           element={
@@ -207,6 +208,7 @@ function App() {
           }
         >
           <Route index element={<AdminOverview />} />
+          <Route path="users" element={<AdminUsers />} />
           <Route path="careers" element={<Admin />} />
           <Route path="colleges" element={<AdminColleges />} />
         </Route>
