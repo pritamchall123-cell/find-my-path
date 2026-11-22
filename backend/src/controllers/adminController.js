@@ -1,5 +1,12 @@
 const { createCareer, updateCareer, deleteCareer } = require('../services/careerService');
 const Skill = require('../models/Skill');
+const { getAdminStats } = require('../services/adminStatsService');
+
+const {
+  createInstitution,
+  updateInstitution,
+  deleteInstitution,
+} = require('../services/institutionService');
 
 const addCareer = async (req, res) => {
   try {
@@ -46,4 +53,44 @@ const addSkill = async (req, res) => {
   }
 };
 
-module.exports = { addCareer, editCareer, removeCareer, listSkills, addSkill };
+const addInstitution = async (req, res) => {
+  try {
+    const institution = await createInstitution(req.body);
+    res.status(201).json({ message: 'College created', institution });
+  } catch (error) {
+    res.status(error.statusCode || 500).json({ message: error.message || 'Server error' });
+  }
+};
+
+const editInstitution = async (req, res) => {
+  try {
+    const institution = await updateInstitution(req.params.id, req.body);
+    res.status(200).json({ message: 'College updated', institution });
+  } catch (error) {
+    res.status(error.statusCode || 500).json({ message: error.message || 'Server error' });
+  }
+};
+
+const removeInstitution = async (req, res) => {
+  try {
+    await deleteInstitution(req.params.id);
+    res.status(200).json({ message: 'College deleted' });
+  } catch (error) {
+    res.status(error.statusCode || 500).json({ message: error.message || 'Server error' });
+  }
+};
+
+const getStats = async (req, res) => {
+  try {
+    const stats = await getAdminStats();
+    res.status(200).json({ stats });
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Server error' });
+  }
+};
+
+module.exports = {
+  addCareer, editCareer, removeCareer, listSkills, addSkill,
+  addInstitution, editInstitution, removeInstitution,
+  getStats,
+};

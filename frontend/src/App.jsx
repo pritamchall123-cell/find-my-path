@@ -39,6 +39,10 @@ import JourneyTimeline from './pages/JourneyTimeline';
 import Achievements from './pages/Achievements';
 import CareerGoals from './pages/CareerGoals';
 import Footer from './components/Footer';
+import AdminLayout from './components/AdminLayout';
+import AdminOverview from './pages/AdminOverview';
+import AdminColleges from './pages/AdminColleges';
+import InstitutionDetail from './pages/InstitutionDetail';
 
 function App() {
   return (
@@ -53,9 +57,11 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/careers" element={<Careers />} />
         <Route path="/careers/:id" element={<CareerDetail />} />
+        <Route path="colleges" element={<AdminColleges />} />
         <Route path="/compare" element={<Compare />} />
         <Route path="/degree-paths" element={<DegreePaths />} />
         <Route path="/institutions" element={<Institutions />} />
+        <Route path="/institutions/:id" element={<InstitutionDetail />} />
         <Route path="/directory" element={<CareerDirectory />} />
         <Route path="/directory/:slug" element={<SectorDetail />} />
         <Route path="/compare-institutions" element={<CompareInstitutions />} />
@@ -196,10 +202,14 @@ function App() {
           path="/admin"
           element={
             <ProtectedRoute>
-              <Admin />
+              <AdminLayout />
             </ProtectedRoute>
           }
-        />
+        >
+          <Route index element={<AdminOverview />} />
+          <Route path="careers" element={<Admin />} />
+          <Route path="colleges" element={<AdminColleges />} />
+        </Route>
         <Route path="/verify-email/:token" element={<VerifyEmail />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         

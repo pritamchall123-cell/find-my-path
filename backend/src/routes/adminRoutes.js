@@ -7,16 +7,26 @@ const {
   removeCareer,
   listSkills,
   addSkill,
+  addInstitution,
+  editInstitution,
+  removeInstitution,
+  getStats,
 } = require('../controllers/adminController');
 
 const router = express.Router();
 
 router.use(protect, adminOnly);
 
+router.get('/stats', getStats);
+
 router.post('/careers', addCareer);
 router.put('/careers/:id', editCareer);
 router.delete('/careers/:id', removeCareer);
 router.get('/skills', listSkills);
 router.post('/skills', addSkill);
+
+router.post('/institutions', addInstitution);
+router.put('/institutions/:id', editInstitution);
+router.delete('/institutions/:id', removeInstitution);
 
 module.exports = router;

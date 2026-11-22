@@ -1,51 +1,125 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import axiosInstance from '../api/axiosInstance';
-import PageLoader from '../components/PageLoader';
 import InstitutionMap from '../components/InstitutionMap';
+import CollegeCard from '../components/CollegeCard';
+
+const PAGE_SIZE = 12;
+const inputClass =
+  'w-full border border-gray-300 rounded-lg p-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300';
 
 function Institutions() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+
+  // Filters
+  const [name, setName] = useState('');
   const [degree, setDegree] = useState(searchParams.get('degree') || '');
+  const [stateFilter, setStateFilter] = useState('');
+  const [type, setType] = useState('');
   const [city, setCity] = useState('');
   const [pincode, setPincode] = useState('');
   const [maxDistanceKm, setMaxDistanceKm] = useState('');
   const [coords, setCoords] = useState(null);
+  const [sort, setSort] = useState('default');
+
+  // Data and UI state
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState('');
   const [institutions, setInstitutions] = useState([]);
+  const [allInstitutions, setAllInstitutions] = useState([]);
   const [selected, setSelected] = useState([]);
   const [savedIds, setSavedIds] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState(false);
   const [view, setView] = useState('list');
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [reloadKey, setReloadKey] = useState(0);
 
-  const handleSearch = async (overrides = {}) => {
-    setLoading(true);
-    try {
-      const params = {};
-      const d = overrides.degree !== undefined ? overrides.degree : degree;
-      const c = overrides.city !== undefined ? overrides.city : city;
-      const p = overrides.pincode !== undefined ? overrides.pincode : pincode;
-      const coordsToUse = overrides.coords !== undefined ? overrides.coords : coords;
+  const requestId = useRef(0);
+  const firstRun = useRef(true);
 
-      if (d) params.degree = d;
-      if (c) params.city = c;
-      if (p) params.pincode = p;
-      if (coordsToUse) {
-        params.lat = coordsToUse.lat;
-        params.lng = coordsToUse.lng;
-        if (maxDistanceKm) params.maxDistanceKm = maxDistanceKm;
+  // One debounced fetch for every filter. Typing waits 400ms before asking the server.
+  useEffect(() => {
+    const delay = firstRun.current ? 0 : 400;
+    firstRun.current = false;
+
+    const timer = setTimeout(async () => {
+      const myRequest = ++requestId.current;
+      setRefreshing(true);
+      setError(false);
+      try {
+        const params = {};
+        if (name.trim()) params.name = name.trim();
+        if (degree.trim()) params.degree = degree.trim();
+        if (stateFilter) params.state = stateFilter;
+        if (type) params.type = type;
+        if (city.trim()) params.city = city.trim();
+        if (pincode.trim()) params.pincode = pincode.trim();
+        if (coords) {
+          params.lat = coords.lat;
+          params.lng = coords.lng;
+          if (maxDistanceKm) params.maxDistanceKm = maxDistanceKm;
+        }
+
+        const res = await axiosInstance.get('/institutions', { params });
+        if (myRequest !== requestId.current) return;
+        setInstitutions(res.data.institutions);
+        setVisibleCount(PAGE_SIZE);
+      } catch (err) {
+        if (myRequest !== requestId.current) return;
+        setError(true);
+        console.error(err);
+      } finally {
+        if (myRequest === requestId.current) {
+          setRefreshing(false);
+          setInitialLoading(false);
+        }
       }
+    }, delay);
 
-      const res = await axiosInstance.get('/institutions', { params });
-      setInstitutions(res.data.institutions);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
+    return () => clearTimeout(timer);
+  }, [name, degree, stateFilter, type, city, pincode, coords, maxDistanceKm, reloadKey]);
+
+  // One-time: full list (for the State dropdown and the total count) and saved colleges.
+  useEffect(() => {
+    axiosInstance
+      .get('/institutions')
+      .then((res) => setAllInstitutions(res.data.institutions))
+      .catch(() => {});
+
+    if (localStorage.getItem('token')) {
+      axiosInstance
+        .get('/institutions/saved')
+        .then((res) => setSavedIds(res.data.savedInstitutions.map((i) => i._id)))
+        .catch(() => {});
     }
-  };
+  }, []);
+
+  const stateOptions = useMemo(() => {
+    const set = new Set(allInstitutions.map((i) => i.location?.state).filter(Boolean));
+    return [...set].sort();
+  }, [allInstitutions]);
+
+  const sorted = useMemo(() => {
+    const list = [...institutions];
+    if (sort === 'za') list.sort((a, b) => b.name.localeCompare(a.name));
+    if (sort === 'newest') list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    return list;
+  }, [institutions, sort]);
+
+  const visible = sorted.slice(0, visibleCount);
+
+  const activeFilters = [
+    name.trim(),
+    degree.trim(),
+    stateFilter,
+    type,
+    city.trim(),
+    pincode.trim(),
+    coords ? 'location' : '',
+  ].filter(Boolean).length;
 
   const handleUseLocation = () => {
     setLocationError('');
@@ -57,18 +131,13 @@ function Institutions() {
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        const newCoords = {
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        };
-        setCoords(newCoords);
+        setCoords({ lat: position.coords.latitude, lng: position.coords.longitude });
         setLocating(false);
-        handleSearch({ coords: newCoords });
       },
-      (error) => {
+      (geoError) => {
         setLocating(false);
-        if (error.code === error.PERMISSION_DENIED) {
-          setLocationError("Location access denied. No problem — just enter your city or PIN code below instead.");
+        if (geoError.code === geoError.PERMISSION_DENIED) {
+          setLocationError('Location access denied. No problem — just enter your city or PIN code instead.');
         } else {
           setLocationError("Couldn't get your location. Try entering your city or PIN code instead.");
         }
@@ -78,12 +147,16 @@ function Institutions() {
   };
 
   const handleClearFilters = () => {
+    setName('');
     setDegree('');
+    setStateFilter('');
+    setType('');
     setCity('');
     setPincode('');
     setCoords(null);
     setMaxDistanceKm('');
-    handleSearch({ degree: '', city: '', pincode: '', coords: null });
+    setSort('default');
+    setLocationError('');
   };
 
   const toggleSelect = (id) => {
@@ -117,70 +190,88 @@ function Institutions() {
     navigate(`/compare-institutions?ids=${selected.join(',')}`);
   };
 
-  useEffect(() => {
-    if (searchParams.get('degree')) {
-      handleSearch({ degree: searchParams.get('degree') });
-    } else {
-      handleSearch();
-    }
-
-    if (localStorage.getItem('token')) {
-      axiosInstance
-        .get('/institutions/saved')
-        .then((res) => setSavedIds(res.data.savedInstitutions.map((i) => i._id)))
-        .catch(() => {});
-    }
-  }, []);
-
   return (
-    <div className="min-h-screen bg-gray-50 p-8 max-w-3xl mx-auto">
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-8 max-w-6xl mx-auto">
       <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
-        <h1 className="text-3xl font-bold">Find Colleges</h1>
+        <h1 className="text-3xl font-bold">Explore Colleges</h1>
         {selected.length > 0 && (
           <button
             onClick={handleCompare}
             disabled={selected.length < 2}
-            className="bg-blue-600 text-white px-4 py-2 rounded font-semibold hover:bg-blue-700 disabled:opacity-50 text-sm"
+            className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-indigo-700 disabled:opacity-50 text-sm"
           >
             Compare Selected ({selected.length})
           </button>
         )}
       </div>
       <p className="text-gray-600 mb-6">
-        Browse all institutions below, or narrow down by degree and location.
+        Discover the right institution for your education and future.
       </p>
 
-      <div className="bg-white p-5 rounded-lg shadow mb-6 space-y-3">
-        <input
-          type="text"
-          placeholder="Degree — e.g. B.Tech Computer Science, MBBS, B.Com"
-          value={degree}
-          onChange={(e) => setDegree(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-          className="w-full border rounded p-2 bg-white"
-        />
+      <div className="bg-white p-4 sm:p-5 rounded-xl shadow-sm mb-5 space-y-3">
+        <div className="flex gap-2 flex-wrap">
+          <input
+            type="text"
+            placeholder="🔍 Search colleges by name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className={`${inputClass} flex-1 min-w-[200px]`}
+          />
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value)}
+            className="border border-gray-300 rounded-lg p-2 text-sm bg-white"
+            aria-label="Sort colleges"
+          >
+            <option value="default">{coords ? 'Nearest first' : 'Name A–Z'}</option>
+            <option value="za">Name Z–A</option>
+            <option value="newest">Recently added</option>
+          </select>
+        </div>
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+          <select value={stateFilter} onChange={(e) => setStateFilter(e.target.value)} className={inputClass}>
+            <option value="">All states</option>
+            {stateOptions.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+          <select value={type} onChange={(e) => setType(e.target.value)} className={inputClass}>
+            <option value="">All types</option>
+            <option value="government">Government</option>
+            <option value="private">Private</option>
+            <option value="deemed">Deemed</option>
+          </select>
+          <input
+            type="text"
+            placeholder="Course — e.g. B.Tech, MBBS"
+            value={degree}
+            onChange={(e) => setDegree(e.target.value)}
+            className={`${inputClass} col-span-2`}
+          />
+        </div>
 
         <div className="flex gap-2 flex-wrap items-center">
           <input
             type="text"
-            placeholder="City, district or state"
+            placeholder="City or district"
             value={city}
             onChange={(e) => setCity(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            className="flex-1 min-w-[150px] border rounded p-2 bg-white text-sm"
+            className={`${inputClass} flex-1 min-w-[150px]`}
           />
           <input
             type="text"
             placeholder="PIN code"
             value={pincode}
             onChange={(e) => setPincode(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            className="w-28 border rounded p-2 bg-white text-sm"
+            className={`${inputClass} w-28`}
           />
           <button
             onClick={handleUseLocation}
             disabled={locating}
-            className="bg-gray-100 hover:bg-gray-200 text-sm px-3 py-2 rounded font-medium whitespace-nowrap disabled:opacity-50"
+            className="bg-gray-100 hover:bg-gray-200 text-sm px-3 py-2 rounded-lg font-medium whitespace-nowrap disabled:opacity-50"
           >
             {locating ? '📍 Locating...' : '📍 Use My Location'}
           </button>
@@ -193,11 +284,8 @@ function Institutions() {
             </span>
             <select
               value={maxDistanceKm}
-              onChange={(e) => {
-                setMaxDistanceKm(e.target.value);
-                handleSearch();
-              }}
-              className="border rounded p-1 text-xs"
+              onChange={(e) => setMaxDistanceKm(e.target.value)}
+              className="border border-gray-300 rounded-lg p-1 text-xs"
             >
               <option value="">Any distance</option>
               <option value="50">Within 50 km</option>
@@ -208,132 +296,121 @@ function Institutions() {
         )}
 
         {locationError && (
-          <p className="text-amber-700 bg-amber-50 p-2 rounded text-xs">{locationError}</p>
+          <p className="text-amber-700 bg-amber-50 p-2 rounded-lg text-xs">{locationError}</p>
         )}
+      </div>
 
+      <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
+        <div className="flex items-center gap-3 flex-wrap">
+          <p className="text-sm text-gray-600">
+            {initialLoading
+              ? 'Loading colleges...'
+              : `Showing ${sorted.length} of ${Math.max(allInstitutions.length, sorted.length)} colleges`}
+          </p>
+          {activeFilters > 0 && (
+            <button onClick={handleClearFilters} className="text-sm text-indigo-600 hover:underline">
+              Clear {activeFilters} filter{activeFilters > 1 ? 's' : ''}
+            </button>
+          )}
+        </div>
         <div className="flex gap-2">
           <button
-            onClick={() => handleSearch()}
-            className="bg-blue-600 text-white px-5 py-2 rounded font-semibold hover:bg-blue-700 text-sm"
+            onClick={() => setView('list')}
+            className={`px-4 py-2 rounded-lg font-semibold text-sm ${
+              view === 'list' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700'
+            }`}
           >
-            Search
+            📋 Gallery
           </button>
           <button
-            onClick={handleClearFilters}
-            className="bg-gray-100 text-gray-700 px-5 py-2 rounded font-semibold hover:bg-gray-200 text-sm"
+            onClick={() => setView('map')}
+            className={`px-4 py-2 rounded-lg font-semibold text-sm ${
+              view === 'map' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700'
+            }`}
           >
-            Show All Colleges
+            🗺️ Map
           </button>
         </div>
       </div>
 
-      {loading && <PageLoader message="Loading colleges..." />}
-
-      {!loading && institutions.length === 0 && (
-        <p className="text-gray-500">No institutions found matching your search.</p>
+      {initialLoading && (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-sm animate-pulse">
+              <div className="aspect-square bg-gray-200" />
+              <div className="p-3 space-y-2">
+                <div className="h-4 bg-gray-200 rounded w-3/4" />
+                <div className="h-3 bg-gray-200 rounded w-1/2" />
+              </div>
+            </div>
+          ))}
+        </div>
       )}
 
-      {!loading && institutions.length > 0 && (
-        <>
-          <div className="flex justify-between items-center mb-4">
-            <p className="text-sm text-gray-500">{institutions.length} institution(s) found</p>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setView('list')}
-                className={`px-4 py-2 rounded-lg font-semibold text-sm ${
-                  view === 'list' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'
-                }`}
-              >
-                📋 List
-              </button>
-              <button
-                onClick={() => setView('map')}
-                className={`px-4 py-2 rounded-lg font-semibold text-sm ${
-                  view === 'map' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'
-                }`}
-              >
-                🗺️ Map
-              </button>
-            </div>
-          </div>
+      {!initialLoading && error && (
+        <div className="bg-white p-6 rounded-xl shadow-sm text-center">
+          <p className="text-gray-700 mb-3">Couldn't load colleges. Please check your connection.</p>
+          <button
+            onClick={() => setReloadKey((k) => k + 1)}
+            className="bg-indigo-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-indigo-700 text-sm"
+          >
+            Try again
+          </button>
+        </div>
+      )}
 
+      {!initialLoading && !error && sorted.length === 0 && (
+        <div className="bg-white p-8 rounded-xl shadow-sm text-center">
+          <p className="text-gray-700 mb-3">No colleges match your search.</p>
+          {activeFilters > 0 && (
+            <button
+              onClick={handleClearFilters}
+              className="bg-indigo-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-indigo-700 text-sm"
+            >
+              Clear filters
+            </button>
+          )}
+        </div>
+      )}
+
+      {!initialLoading && !error && sorted.length > 0 && (
+        <div className={refreshing ? 'opacity-60 transition-opacity' : 'transition-opacity'}>
           {view === 'map' && (
             <div className="mb-6">
-              <InstitutionMap institutions={institutions} userCoords={coords} />
+              <InstitutionMap institutions={sorted} userCoords={coords} />
             </div>
           )}
 
           {view === 'list' && (
-            <div className="space-y-4">
-              {institutions.map((inst) => (
-                <div key={inst._id} className="bg-white p-5 rounded-lg shadow relative">
-                  <div className="absolute top-5 right-5 flex items-center gap-2">
-                    <button
-                      onClick={(e) => toggleSaveInstitution(e, inst._id)}
-                      className="text-lg"
-                      title={savedIds.includes(inst._id) ? 'Remove from saved' : 'Save for later'}
-                    >
-                      {savedIds.includes(inst._id) ? '🔖' : '🏷️'}
-                    </button>
-                    <label className="flex items-center gap-1 text-xs bg-gray-50 px-2 py-1 rounded">
-                      <input
-                        type="checkbox"
-                        checked={selected.includes(inst._id)}
-                        onChange={() => toggleSelect(inst._id)}
-                      />
-                      Compare
-                    </label>
-                  </div>
-                  <div className="pr-32">
-                    <div className="flex items-start gap-2 flex-wrap">
-                      <h2 className="font-bold text-lg">{inst.name}</h2>
-                      {inst.distanceKm != null && (
-                        <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full whitespace-nowrap">
-                          📍 {inst.distanceKm} km away
-                        </span>
-                      )}
-                      <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full whitespace-nowrap">
-                        {inst.type}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-500 mt-1">
-                      📍 {inst.location?.city}, {inst.location?.state}
-                    </p>
-                    <p className="text-sm text-gray-700 mt-2">{inst.notableFor}</p>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {inst.degreesOffered?.slice(0, 4).map((d, i) => (
-                        <span key={i} className="text-xs bg-indigo-50 text-indigo-700 px-2 py-1 rounded-full">
-                          {d}
-                        </span>
-                      ))}
-                    </div>
-                    <div className="flex flex-wrap gap-4 mt-3 text-xs text-gray-500">
-                      {inst.approxFeesPerYear && <span>💰 {inst.approxFeesPerYear}</span>}
-                    </div>
-                    {inst.dataProvenance?.verificationStatus === 'unverified' && (
-                      <p className="text-[11px] text-amber-600 mt-2">
-                        ⚠️ Fee and detail figures are approximate — verify with the official website.
-                      </p>
-                    )}
-                    {inst.website && (
-                      <a
-                        href={inst.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 text-sm font-medium hover:underline mt-2 inline-block"
-                      >
-                        Visit Website →
-                      </a>
-                    )}
-                  </div>
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+                {visible.map((inst) => (
+                  <CollegeCard
+                    key={inst._id}
+                    inst={inst}
+                    saved={savedIds.includes(inst._id)}
+                    selected={selected.includes(inst._id)}
+                    onToggleSave={(e) => toggleSaveInstitution(e, inst._id)}
+                    onToggleSelect={() => toggleSelect(inst._id)}
+                  />
+                ))}
+              </div>
+              {visible.length < sorted.length && (
+                <div className="text-center mt-8">
+                  <button
+                    onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+                    className="bg-white shadow-sm px-6 py-2 rounded-lg font-semibold text-sm hover:bg-gray-50"
+                  >
+                    Show more ({sorted.length - visible.length} left)
+                  </button>
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
-        </>
+        </div>
       )}
 
-      <p className="text-xs text-gray-400 mt-6 italic">
+      <p className="text-xs text-gray-400 mt-8 italic">
         This is a small starter database, not an exhaustive list. Distances are straight-line estimates, not driving distance. Always verify current fees, cutoffs, and admission details directly with the institution.
       </p>
     </div>

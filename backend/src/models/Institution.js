@@ -25,6 +25,15 @@ const institutionSchema = new mongoose.Schema(
     degreesOffered: [{ type: String, trim: true }],
     approxFeesPerYear: { type: String, trim: true },
     notableFor: { type: String, trim: true },
+        imageUrl: {
+      type: String,
+      trim: true,
+      default: '',
+      validate: {
+        validator: (v) => !v || /^https?:\/\//i.test(v),
+        message: 'imageUrl must start with http:// or https://',
+      },
+    },
     website: { type: String, trim: true },
     dataProvenance: {
       source: { type: String, trim: true, default: 'Platform-curated (general knowledge)' },

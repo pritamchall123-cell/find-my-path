@@ -1,13 +1,16 @@
 const {
   getInstitutions,
+  getInstitutionById,
   toggleSavedInstitution,
   getSavedInstitutions,
 } = require('../services/institutionService');
 
 const list = async (req, res) => {
   try {
-    const { degree, city, pincode, lat, lng, maxDistanceKm } = req.query;
-    const institutions = await getInstitutions({ degree, city, pincode, lat, lng, maxDistanceKm });
+    const { degree, city, state, name, type, pincode, lat, lng, maxDistanceKm } = req.query;
+    const institutions = await getInstitutions({
+      degree, city, state, name, type, pincode, lat, lng, maxDistanceKm,
+    });
     res.status(200).json({ institutions });
   } catch (error) {
     res.status(500).json({ message: error.message || 'Server error' });
@@ -36,4 +39,16 @@ const listSaved = async (req, res) => {
   }
 };
 
-module.exports = { list, toggleSave, listSaved };
+const getOne = async (req, res) => {
+  try {
+    const institution = await getInstitutionById(req.params.id);
+    if (!institution) {
+      return res.status(404).json({ message: 'Institution not found' });
+    }
+    res.status(200).json({ institution });
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Server error' });
+  }
+};
+
+module.exports = { list, toggleSave, listSaved, getOne };
