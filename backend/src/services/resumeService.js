@@ -1,12 +1,11 @@
 const { PDFParse } = require('pdf-parse');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
 const Profile = require('../models/Profile');
 const Career = require('../models/Career');
 const Resume = require('../models/Resume');
 const { buildResumeAnalysisPrompt } = require('../prompts/resumeAnalysisPrompt');
-const retryGemini = require('../utils/retryGemini');
+const { generateText, extractJson } = require('../utils/groq');
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const MAX_RESUME_CHARS = 8000; // keeps the request small enough for Groq's free limits
 
 const analyzeResume = async (userId, fileBuffer, fileName) => {
   const profile = await Profile.findOne({ user: userId });
@@ -29,20 +28,18 @@ const analyzeResume = async (userId, fileBuffer, fileName) => {
   }
 
   const prompt = buildResumeAnalysisPrompt({
-    resumeText,
+    resumeText: resumeText.slice(0, MAX_RESUME_CHARS),
     careerName: career.name,
     requiredSkills,
   });
 
-  const model = genAI.getGenerativeModel({ model: 'gemini-3.8-flash' });
-  const result = await retryGemini(() => model.generateContent(prompt));
-  const raw = result.response.text();
-  const cleaned = raw.replace(/```json|```/g, '').trim();
+  const raw = await generateText(prompt);
 
   let analysis;
   try {
-    analysis = JSON.parse(cleaned);
+    analysis = JSON.parse(extractJson(raw));
   } catch (err) {
+    console.error('Resume analysis JSON parse failed. Raw output:', raw);
     const error = new Error('Failed to analyze resume. Please try again.');
     error.statusCode = 500;
     throw error;

@@ -4,63 +4,7 @@ const Roadmap = require('../models/Roadmap');
 const { getSkillGap } = require('./skillGapService');
 const { buildRoadmapPrompt } = require('../prompts/roadmapPrompt');
 const { createNotification } = require('./notificationService');
-const retryGroq = require('../utils/retryGroq');
-
-// Main model first, backup second
-const GROQ_MODELS = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
-
-const callGroqModel = async (model, prompt) => {
-  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
-    },
-    body: JSON.stringify({
-      model,
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.4,
-    }),
-  });
-
-  if (!res.ok) {
-    const err = new Error(`Groq ${model} ${res.status}: ${await res.text()}`);
-    err.status = res.status;
-    throw err;
-  }
-
-  const data = await res.json();
-  return data.choices[0].message.content;
-};
-
-const generateText = async (prompt) => {
-  if (!process.env.GROQ_API_KEY) {
-    console.error('GROQ_API_KEY is not set');
-    const e = new Error('AI service is not configured.');
-    e.statusCode = 500;
-    throw e;
-  }
-
-  for (const model of GROQ_MODELS) {
-    try {
-      return await retryGroq(() => callGroqModel(model, prompt));
-    } catch (err) {
-      console.error(`Groq model ${model} failed:`, err.message);
-    }
-  }
-
-  const e = new Error('AI is busy right now, please try again in a minute.');
-  e.statusCode = 503;
-  throw e;
-};
-
-const extractJson = (raw) => {
-  const cleaned = raw.replace(/```json|```/g, '').trim();
-  const starts = [cleaned.indexOf('['), cleaned.indexOf('{')].filter((i) => i >= 0);
-  const start = starts.length ? Math.min(...starts) : -1;
-  const end = Math.max(cleaned.lastIndexOf(']'), cleaned.lastIndexOf('}'));
-  return start >= 0 && end > start ? cleaned.slice(start, end + 1) : cleaned;
-};
+const { generateText, extractJson } = require('../utils/groq');
 
 const generateRoadmap = async (userId) => {
   const profile = await Profile.findOne({ user: userId });
