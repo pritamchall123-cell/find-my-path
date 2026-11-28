@@ -1,3 +1,4 @@
+const User = require('../models/User');
 const Profile = require('../models/Profile');
 const Career = require('../models/Career');
 const Roadmap = require('../models/Roadmap');
@@ -22,10 +23,11 @@ const generateRoadmap = async (userId) => {
   }
 
   const gapResult = await getSkillGap(userId);
+  const user = await User.findById(userId).select('educationLevel');
 
   const prompt = buildRoadmapPrompt({
     careerName: career.name,
-    educationLevel: profile.academic?.yearOrGrade || 'college',
+    educationLevel: user?.educationLevel || 'college',
     gaps: gapResult.gaps,
     entryPaths: career.entryPaths || { streams: [], degrees: [] },
   });

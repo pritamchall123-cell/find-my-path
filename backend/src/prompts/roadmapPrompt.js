@@ -3,22 +3,40 @@ const buildRoadmapPrompt = ({ careerName, educationLevel, gaps, entryPaths }) =>
     .map((g) => `${g.skill} (readiness: ${g.readiness}%, gap: ${g.gap}%)`)
     .join('; ');
 
-  const startingPointNote =
-    educationLevel === 'class10'
-      ? `The student is in Class 10. The roadmap MUST start with stream selection (options: ${entryPaths.streams.join(', ') || 'relevant streams'}), then degree selection (${entryPaths.degrees.join(', ') || 'relevant degrees'}), before moving to skills.`
-      : educationLevel === 'class12'
-      ? `The student is in Class 12. The roadmap MUST start with degree selection (${entryPaths.degrees.join(', ') || 'relevant degrees'}), before moving to skills.`
-      : `The student is in college or a graduate. The roadmap should start directly with core skills.`;
+  const streams = entryPaths?.streams?.join(', ') || 'relevant streams';
+  const degrees = entryPaths?.degrees?.join(', ') || 'relevant degrees';
 
-  return `You are generating a personalized learning roadmap for a student on FindMyPath, a career guidance platform.
+  const startingPoints = {
+    class10: {
+      label: 'Class 10',
+      note: `Step 1 MUST be choosing a stream (options: ${streams}). Step 2 MUST be choosing a degree (options: ${degrees}) and preparing for admission. Later steps introduce beginner skills that fit alongside school studies.`,
+    },
+    class12: {
+      label: 'Class 12',
+      note: `Step 1 MUST be choosing a degree (options: ${degrees}) and preparing for admission. Do not include stream selection. Later steps build beginner skills.`,
+    },
+    college: {
+      label: 'College student',
+      note: 'Start directly with core skills. Do not include stream or degree selection. Include projects and internships that fit alongside classes.',
+    },
+    graduate: {
+      label: 'Graduate',
+      note: 'Start with the biggest skill gaps. Do not include stream or degree selection. Focus on projects, portfolio, interview preparation and job applications.',
+    },
+  };
+
+  const { label, note } = startingPoints[educationLevel] || startingPoints.college;
+
+  return `You are generating a personalized learning roadmap for a student on FindMyPath, a career guidance platform for Indian students.
 
 Target career: ${careerName}
-Student's education level: ${educationLevel}
+Student's education level: ${label}
 Student's current skill gaps (from real assessment data): ${gapText}
 
-${startingPointNote}
+STARTING POINT RULES (these come first):
+${note}
 
-Generate 5-8 ordered roadmap steps following this general structure: foundation → core skills → practice → projects → portfolio → interview prep. Prioritize skills with the highest gap percentage. Each step should be realistic and actionable for a beginner.
+Generate 5-8 ordered roadmap steps. After the starting point, follow this general structure where it suits the student's level: foundation -> core skills -> practice -> projects -> portfolio -> interview prep. Prioritize skills with the highest gap percentage. Each step should be realistic and actionable for a beginner.
 
 Respond ONLY with valid JSON, no other text, in this exact format:
 [

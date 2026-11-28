@@ -64,3 +64,105 @@
 .animation-delay-4000 {
   animation-delay: 4s;
 }
+
+/* ===== Dark theme ===== */
+html.dark { color-scheme: dark; }
+html.dark body { background-color: #0f172a; color: #e5e7eb; }
+
+.dark {
+  /* Backgrounds */
+  .bg-white { background-color: #1e293b; }
+  .bg-gray-50 { background-color: #0f172a; }
+  .bg-gray-100 { background-color: #334155; }
+  .bg-gray-200 { background-color: #475569; }
+  .bg-white\/60, .bg-white\/70, .bg-white\/80, .bg-white\/90 { background-color: rgb(30 41 59 / 0.8); }
+
+  /* Text */
+  .text-black, .text-gray-900, .text-gray-800 { color: #f1f5f9; }
+  .text-gray-700 { color: #e2e8f0; }
+  .text-gray-600 { color: #cbd5e1; }
+  .text-gray-500 { color: #94a3b8; }
+
+  /* Borders */
+  .border-gray-100, .border-gray-200 { border-color: #334155; }
+  .border-gray-300 { border-color: #475569; }
+
+  /* Hover */
+    /* Hover backgrounds */
+  :is(
+    .hover\:bg-white,
+    .hover\:bg-gray-50, .hover\:bg-gray-100, .hover\:bg-gray-200,
+    .hover\:bg-slate-50, .hover\:bg-slate-100,
+    .hover\:bg-blue-50, .hover\:bg-blue-100,
+    .hover\:bg-indigo-50, .hover\:bg-indigo-100,
+    .hover\:bg-violet-50, .hover\:bg-violet-100,
+    .hover\:bg-purple-50, .hover\:bg-purple-100,
+    .hover\:bg-fuchsia-50, .hover\:bg-fuchsia-100,
+    .hover\:bg-red-50, .hover\:bg-red-100
+  ):hover { background-color: #334155; }
+
+  /* Hover gradients */
+  :is(
+    .hover\:from-gray-50, .hover\:from-blue-50,
+    .hover\:from-indigo-50, .hover\:from-violet-50
+  ):hover {
+    --tw-gradient-from: #334155;
+    --tw-gradient-to: #334155;
+  }
+
+  /* Keep text readable on hover */
+  :is(.hover\:text-black, .hover\:text-gray-800, .hover\:text-gray-900):hover { color: #f1f5f9; }
+  :is(.hover\:text-blue-600, .hover\:text-blue-700):hover { color: var(--color-blue-300); }
+  :is(.hover\:text-indigo-600, .hover\:text-indigo-700):hover { color: var(--color-indigo-300); }
+  :is(.hover\:text-red-600, .hover\:text-red-700):hover { color: var(--color-red-300); }
+
+  /* Coloured boxes and badges */
+  .bg-blue-50, .bg-blue-100 { background-color: color-mix(in srgb, var(--color-blue-500) 20%, transparent); }
+  .bg-indigo-50, .bg-indigo-100 { background-color: color-mix(in srgb, var(--color-indigo-500) 20%, transparent); }
+  .bg-violet-50, .bg-violet-100 { background-color: color-mix(in srgb, var(--color-violet-500) 20%, transparent); }
+  .bg-green-50, .bg-green-100 { background-color: color-mix(in srgb, var(--color-green-500) 20%, transparent); }
+  .bg-yellow-50, .bg-yellow-100 { background-color: color-mix(in srgb, var(--color-yellow-500) 20%, transparent); }
+  .bg-red-50, .bg-red-100 { background-color: color-mix(in srgb, var(--color-red-500) 20%, transparent); }
+
+  .text-blue-700, .text-blue-800 { color: var(--color-blue-300); }
+  .text-indigo-700, .text-indigo-800 { color: var(--color-indigo-300); }
+  .text-violet-700, .text-violet-800 { color: var(--color-violet-300); }
+  .text-green-700, .text-green-800 { color: var(--color-green-300); }
+  .text-yellow-700, .text-yellow-800 { color: var(--color-yellow-300); }
+  .text-red-700, .text-red-800 { color: var(--color-red-300); }
+
+  /* Page gradients */
+  .from-white, .from-gray-50, .from-blue-50, .from-indigo-50, .from-violet-50 { --tw-gradient-from: #0f172a; }
+  .via-white, .via-violet-50, .via-indigo-50 { --tw-gradient-via: #1e1b4b; }
+  .to-white, .to-gray-50, .to-blue-50, .to-violet-50, .to-fuchsia-50 { --tw-gradient-to: #0f172a; }
+}
+
+/* ===== Light theme colours ===== */
+html:not(.dark) {
+  /* Change these four lines to change the whole light theme */
+  --page: #f5efe3;   /* page background */
+  --card: #fcf8ef;   /* cards, navbar, menus */
+  --soft: #ede4d1;   /* grey boxes and hover */
+  --line: #e2d7c0;   /* borders */
+}
+
+html:not(.dark) body { background-color: var(--page); }
+
+html:not(.dark) {
+  /* :not(...) lets hover colours keep working */
+  .bg-white:not([class*="hover:bg-"]:hover) { background-color: var(--card); }
+  .bg-gray-50:not([class*="hover:bg-"]:hover) { background-color: var(--page); }
+  .bg-gray-100:not([class*="hover:bg-"]:hover) { background-color: var(--soft); }
+
+  .bg-white\/60, .bg-white\/70, .bg-white\/80, .bg-white\/90 {
+    background-color: color-mix(in srgb, var(--card) 80%, transparent);
+  }
+
+  .hover\:bg-gray-50:hover, .hover\:bg-gray-100:hover { background-color: var(--soft); }
+
+  .border-gray-100, .border-gray-200, .border-gray-300 { border-color: var(--line); }
+
+  .from-white, .from-gray-50 { --tw-gradient-from: var(--page); }
+  .via-white { --tw-gradient-via: var(--card); }
+  .to-white, .to-gray-50 { --tw-gradient-to: var(--page); }
+}

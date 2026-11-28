@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
 import NotificationBell from './NotificationBell';
 import SideMenu from './SideMenu';
+import ThemeToggle from './ThemeToggle';
+
 
 function Navbar() {
   const token = localStorage.getItem('token');
@@ -24,6 +26,7 @@ function Navbar() {
         <Link to="/scholarships" className="text-gray-700 hover:text-blue-600 hidden sm:block">
           Scholarships
         </Link>
+        <ThemeToggle />
 
         {token ? (
           <>
